@@ -15,6 +15,9 @@ Pillow==10.2.0
 # Excel/Spreadsheet
 openpyxl==3.1.2
 
+# Word Documents
+python-docx==1.1.0
+
 # Google Generative AI (Gemini)
 google-generativeai==0.3.2
 

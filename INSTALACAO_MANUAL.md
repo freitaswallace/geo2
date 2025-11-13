@@ -56,12 +56,17 @@ pip install Pillow==10.2.0
 pip install openpyxl==3.1.2
 ```
 
-### 6. Instalar Google Generative AI (Gemini)
+### 6. Instalar python-docx (arquivos Word)
+```bash
+pip install python-docx==1.1.0
+```
+
+### 7. Instalar Google Generative AI (Gemini)
 ```bash
 pip install google-generativeai==0.3.2
 ```
 
-### 7. Instalar dependências do Google (4 pacotes)
+### 8. Instalar dependências do Google (4 pacotes)
 ```bash
 pip install google-api-core==2.15.0
 ```
@@ -78,7 +83,7 @@ pip install googleapis-common-protos==1.62.0
 pip install protobuf==4.25.2
 ```
 
-### 8. (OPCIONAL) PyInstaller - Apenas se for criar o .exe
+### 9. (OPCIONAL) PyInstaller - Apenas se for criar o .exe
 ```bash
 pip install pyinstaller==6.3.0
 ```
@@ -132,7 +137,7 @@ O Poppler é necessário para converter PDFs em imagens.
 Cole este comando no CMD:
 
 ```bash
-python -c "import pdf2image, PIL, google.generativeai, openpyxl, PyPDF2; print('✅ TODAS AS DEPENDÊNCIAS INSTALADAS COM SUCESSO!')"
+python -c "import pdf2image, PIL, google.generativeai, openpyxl, PyPDF2, docx; print('✅ TODAS AS DEPENDÊNCIAS INSTALADAS COM SUCESSO!')"
 ```
 
 Se aparecer a mensagem de sucesso, está tudo pronto! 🎉
@@ -212,6 +217,7 @@ pip install pdf2image==1.16.3
 pip install PyPDF2==3.0.1
 pip install Pillow==10.2.0
 pip install openpyxl==3.1.2
+pip install python-docx==1.1.0
 pip install google-generativeai==0.3.2
 pip install google-api-core==2.15.0
 pip install google-auth==2.26.2

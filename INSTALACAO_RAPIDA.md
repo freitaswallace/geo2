@@ -128,7 +128,7 @@ pip install -r requirements.txt --upgrade
 Para verificar se tudo está correto, execute:
 
 ```bash
-python -c "import pdf2image, PIL, google.generativeai, openpyxl, PyPDF2; print('✅ Todas as dependências instaladas!')"
+python -c "import pdf2image, PIL, google.generativeai, openpyxl, PyPDF2, docx; print('✅ Todas as dependências instaladas!')"
 ```
 
 Se aparecer "✅ Todas as dependências instaladas!", está tudo pronto!
