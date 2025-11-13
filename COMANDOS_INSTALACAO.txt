@@ -1,0 +1,71 @@
+═══════════════════════════════════════════════════════════════
+  📦 COMANDOS DE INSTALAÇÃO - COPIE E COLE NO CMD
+═══════════════════════════════════════════════════════════════
+
+🐍 PYTHON RECOMENDADO:
+────────────────────────────────────────────────────────────────
+Python 3.11.9 (64-bit)
+
+Link de Download:
+https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe
+
+⚠️ IMPORTANTE: Durante a instalação, MARQUE:
+   [✓] Add Python 3.11 to PATH
+   [✓] Install pip
+
+
+📦 COMANDOS PARA INSTALAR DEPENDÊNCIAS:
+────────────────────────────────────────────────────────────────
+Copie e cole cada linha abaixo no Prompt de Comando (CMD):
+
+python -m pip install --upgrade pip
+pip install pdf2image==1.16.3
+pip install PyPDF2==3.0.1
+pip install Pillow==10.2.0
+pip install openpyxl==3.1.2
+pip install google-generativeai==0.3.2
+pip install google-api-core==2.15.0
+pip install google-auth==2.26.2
+pip install googleapis-common-protos==1.62.0
+pip install protobuf==4.25.2
+
+
+🔧 POPPLER (OBRIGATÓRIO):
+────────────────────────────────────────────────────────────────
+1. Baixe em:
+   https://github.com/oschwartz10612/poppler-windows/releases/
+
+2. Extraia para: C:\poppler
+
+3. Adicione ao PATH (CMD como Administrador):
+   setx PATH "%PATH%;C:\poppler\Library\bin" /M
+
+4. REINICIE O COMPUTADOR
+
+
+✅ VERIFICAR SE DEU CERTO:
+────────────────────────────────────────────────────────────────
+Cole este comando no CMD:
+
+python -c "import pdf2image, PIL, google.generativeai, openpyxl, PyPDF2; print('SUCESSO!')"
+
+Se aparecer "SUCESSO!", está tudo instalado!
+
+
+▶️ EXECUTAR O APLICATIVO:
+────────────────────────────────────────────────────────────────
+cd C:\caminho\para\pasta\geo2
+python verificador_georreferenciamento.py
+
+
+═══════════════════════════════════════════════════════════════
+  🚀 INSTALAÇÃO AUTOMÁTICA (OPÇÃO MAIS FÁCIL)
+═══════════════════════════════════════════════════════════════
+
+Ao invés de copiar os comandos manualmente, você pode:
+
+1. Dar duplo clique em: instalar_dependencias.bat
+2. Aguardar a instalação automática
+3. Instalar o Poppler manualmente (veja acima)
+
+═══════════════════════════════════════════════════════════════
