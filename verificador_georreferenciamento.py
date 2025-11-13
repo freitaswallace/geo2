@@ -1447,10 +1447,10 @@ class VerificadorGeorreferenciamento:
         output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
         output_pdf = output_dir / "memorial_incra_extraido.pdf"
 
-        # Usar Gemini
+        # Usar Gemini 2.0 Flash Experimental
         api_key = self.config_manager.get_api_key()
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
         images = convert_from_path(pdf_path, dpi=150)
         paginas_encontradas = []
@@ -1513,10 +1513,10 @@ class VerificadorGeorreferenciamento:
         output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
         output_pdf = output_dir / "projeto_extraido.pdf"
 
-        # Usar Gemini
+        # Usar Gemini 2.0 Flash Experimental
         api_key = self.config_manager.get_api_key()
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
         images = convert_from_path(pdf_path, dpi=150)
         paginas_encontradas = []
