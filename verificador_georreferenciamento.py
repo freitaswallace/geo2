@@ -1326,40 +1326,58 @@ class VerificadorGeorreferenciamento:
 
     def _salvar_backups_pdfs(self):
         """Salva backups dos PDFs extraídos."""
-        # Tentar várias localizações comuns
-        possible_docs = [
-            Path.home() / "Documents",  # Inglês/Linux
-            Path.home() / "Documentos",  # Português
-            Path.home()  # Fallback
-        ]
+        try:
+            # Tentar várias localizações comuns
+            possible_docs = [
+                Path.home() / "Documents",  # Inglês/Linux
+                Path.home() / "Documentos",  # Português
+                Path.home()  # Fallback
+            ]
 
-        docs_dir = None
-        for path in possible_docs:
-            if path.exists():
-                docs_dir = path / "Relatórios INCRA"
-                break
+            docs_dir = None
+            for path in possible_docs:
+                if path.exists() and path.is_dir():
+                    docs_dir = path / "Relatórios INCRA"
+                    break
 
-        if docs_dir is None:
-            docs_dir = Path.home() / "Relatórios INCRA"
+            if docs_dir is None:
+                docs_dir = Path.home() / "Relatórios INCRA"
 
-        incra_dir = docs_dir / "PDF_INCRAS"
-        projeto_dir = docs_dir / "PDF_PLANTAS"
+            # Criar diretório principal
+            docs_dir.mkdir(parents=True, exist_ok=True)
+            print(f"📁 Diretório principal criado/verificado: {docs_dir}")
 
-        incra_dir.mkdir(parents=True, exist_ok=True)
-        projeto_dir.mkdir(parents=True, exist_ok=True)
+            # Criar subdiretórios
+            incra_dir = docs_dir / "PDF_INCRAS"
+            projeto_dir = docs_dir / "PDF_PLANTAS"
 
-        numero = self.numero_prenotacao.get()
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            incra_dir.mkdir(parents=True, exist_ok=True)
+            projeto_dir.mkdir(parents=True, exist_ok=True)
 
-        if self.pdf_extraido_incra:
-            dest_incra = incra_dir / f"INCRA_{numero}_{timestamp}.pdf"
-            shutil.copy2(self.pdf_extraido_incra, dest_incra)
-            print(f"✅ PDF INCRA salvo em: {dest_incra}")
+            print(f"📁 Pasta PDF_INCRAS criada em: {incra_dir}")
+            print(f"📁 Pasta PDF_PLANTAS criada em: {projeto_dir}")
 
-        if self.pdf_extraido_projeto:
-            dest_projeto = projeto_dir / f"PROJETO_{numero}_{timestamp}.pdf"
-            shutil.copy2(self.pdf_extraido_projeto, dest_projeto)
-            print(f"✅ PDF PROJETO salvo em: {dest_projeto}")
+            numero = self.numero_prenotacao.get()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            if self.pdf_extraido_incra and Path(self.pdf_extraido_incra).exists():
+                dest_incra = incra_dir / f"INCRA_{numero}_{timestamp}.pdf"
+                shutil.copy2(self.pdf_extraido_incra, dest_incra)
+                print(f"✅ PDF INCRA salvo em: {dest_incra}")
+            else:
+                print(f"⚠️ PDF INCRA não encontrado ou não existe")
+
+            if self.pdf_extraido_projeto and Path(self.pdf_extraido_projeto).exists():
+                dest_projeto = projeto_dir / f"PROJETO_{numero}_{timestamp}.pdf"
+                shutil.copy2(self.pdf_extraido_projeto, dest_projeto)
+                print(f"✅ PDF PROJETO salvo em: {dest_projeto}")
+            else:
+                print(f"⚠️ PDF PROJETO não encontrado ou não existe")
+
+        except Exception as e:
+            print(f"❌ Erro ao salvar backups: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
     def _gerar_previews(self):
         """Gera thumbnails dos documentos extraídos."""
@@ -1488,8 +1506,8 @@ class VerificadorGeorreferenciamento:
             box-sizing: border-box;
         }
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
             padding: 20px;
         }
         .container {
@@ -1497,94 +1515,105 @@ class VerificadorGeorreferenciamento:
             margin: 0 auto;
             background: white;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
         }
         h1 {
-            color: #2c3e50;
+            color: #1a1a1a;
             text-align: center;
             margin-bottom: 10px;
-            font-size: 32px;
+            font-size: 28px;
+            font-weight: 600;
         }
         .subtitle {
             text-align: center;
-            color: #7f8c8d;
+            color: #666;
             margin-bottom: 30px;
             font-size: 14px;
         }
         .info-box {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 6px;
             margin-bottom: 30px;
+            border-left: 4px solid #2c5282;
         }
         .info-box strong {
-            color: #2c3e50;
+            color: #1a1a1a;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
         }
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c5282;
             color: white;
-            padding: 15px;
+            padding: 14px 15px;
             text-align: left;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         td {
             padding: 12px 15px;
-            border-bottom: 1px solid #ecf0f1;
+            border-bottom: 1px solid #e8e8e8;
             font-size: 13px;
+            color: #333;
         }
         tr:hover {
             background-color: #f8f9fa;
         }
         .identico {
-            background-color: #d4edda !important;
-            border-left: 4px solid #28a745;
+            background-color: #e8f5e9 !important;
+            border-left: 4px solid #2e7d32;
         }
         .diferente {
-            background-color: #f8d7da !important;
-            border-left: 4px solid #dc3545;
+            background-color: #ffebee !important;
+            border-left: 4px solid #c62828;
             font-weight: 600;
         }
         .resumo {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c5282;
             color: white;
-            padding: 25px;
-            border-radius: 10px;
+            padding: 25px 30px;
+            border-radius: 6px;
             margin-top: 30px;
         }
         .resumo h2 {
             margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 22px;
+            font-weight: 600;
         }
         .resumo h4 {
-            margin-top: 15px;
+            margin-top: 18px;
             margin-bottom: 10px;
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding-bottom: 8px;
         }
         .resumo p {
-            margin: 5px 0;
-            font-size: 16px;
+            margin: 8px 0;
+            font-size: 15px;
         }
         .section-title {
-            color: #2c3e50;
+            color: #1a1a1a;
             margin: 40px 0 20px 0;
             padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
-            font-size: 24px;
+            border-bottom: 3px solid #2c5282;
+            font-size: 22px;
+            font-weight: 600;
         }
         .rodape {
             text-align: center;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 2px solid #ecf0f1;
-            color: #7f8c8d;
+            border-top: 2px solid #e0e0e0;
+            color: #888;
             font-size: 12px;
         }
     </style>
@@ -1659,7 +1688,7 @@ class VerificadorGeorreferenciamento:
 
             # Adicionar linha de separação visual entre vértices
             if i > 1:
-                html.append('<tr style="height: 3px; background: #667eea;"><td colspan="5"></td></tr>')
+                html.append('<tr style="height: 3px; background: #2c5282;"><td colspan="5"></td></tr>')
 
             # Iterar pelos campos deste vértice
             for idx, (campo, val_incra, val_projeto, col_name) in enumerate(campos):
@@ -1676,7 +1705,7 @@ class VerificadorGeorreferenciamento:
 
                 # Mostrar número do vértice apenas na primeira linha
                 if idx == 0:
-                    html.append(f'<td rowspan="4" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #667eea;">#{i}</td>')
+                    html.append(f'<td rowspan="4" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #2c5282;">#{i}</td>')
 
                 html.append(f'<td><strong>{campo}</strong><br><span style="font-size: 11px; color: #999;">{col_name}</span></td>')
                 html.append(f'<td>{val_incra}</td>')
@@ -1725,7 +1754,7 @@ class VerificadorGeorreferenciamento:
 
             # Adicionar linha de separação visual entre segmentos
             if i > 1:
-                html.append('<tr style="height: 3px; background: #667eea;"><td colspan="5"></td></tr>')
+                html.append('<tr style="height: 3px; background: #2c5282;"><td colspan="5"></td></tr>')
 
             for idx, (campo, val_incra, val_projeto, col_name) in enumerate(campos):
                 status_classe = "identico" if val_incra == val_projeto else "diferente"
@@ -1741,7 +1770,7 @@ class VerificadorGeorreferenciamento:
 
                 # Mostrar número do segmento apenas na primeira linha
                 if idx == 0:
-                    html.append(f'<td rowspan="3" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #667eea;">#{i}</td>')
+                    html.append(f'<td rowspan="3" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #2c5282;">#{i}</td>')
 
                 html.append(f'<td><strong>{campo}</strong><br><span style="font-size: 11px; color: #999;">{col_name}</span></td>')
                 html.append(f'<td>{val_incra}</td>')
