@@ -1,0 +1,58 @@
+# ========================================
+# Verificador INCRA Pro - Dependencies
+# ========================================
+
+# Core Dependencies
+# ----------------------------------------
+
+# PDF Processing
+pdf2image==1.16.3
+PyPDF2==3.0.1
+
+# Image Processing
+Pillow==10.2.0
+
+# Excel/Spreadsheet
+openpyxl==3.1.2
+
+# Google Generative AI (Gemini)
+google-generativeai==0.3.2
+
+# Additional Google AI Dependencies
+google-api-core==2.15.0
+google-auth==2.26.2
+googleapis-common-protos==1.62.0
+protobuf==4.25.2
+
+# Build Dependencies (for creating .exe)
+# ----------------------------------------
+# Uncomment the line below if you want to build the .exe
+# pyinstaller==6.3.0
+
+# ========================================
+# INSTALLATION INSTRUCTIONS
+# ========================================
+#
+# To install all dependencies, run:
+#   pip install -r requirements.txt
+#
+# To install with PyInstaller (for building .exe):
+#   pip install -r requirements.txt pyinstaller
+#
+# ========================================
+# SYSTEM DEPENDENCIES
+# ========================================
+#
+# IMPORTANT: This project also requires Poppler
+#
+# Windows:
+#   Download from: https://github.com/oschwartz10612/poppler-windows/releases/
+#   See BUILD_INSTRUCTIONS.md for details
+#
+# Linux (Ubuntu/Debian):
+#   sudo apt-get install poppler-utils
+#
+# macOS:
+#   brew install poppler
+#
+# ========================================
