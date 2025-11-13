@@ -84,7 +84,15 @@ class VerificadorGeorreferenciamento:
     def __init__(self, root):
         self.root = root
         self.root.title("✨ Verificador INCRA Pro v4.0")
-        self.root.geometry("1450x980")
+
+        # Maximizar janela ao iniciar
+        try:
+            self.root.state('zoomed')  # Windows
+        except:
+            try:
+                self.root.attributes('-zoomed', True)  # Linux
+            except:
+                self.root.geometry("1450x980")  # Fallback
 
         # Gerenciador de configurações
         self.config_manager = ConfigManager()
@@ -1464,6 +1472,7 @@ class VerificadorGeorreferenciamento:
             Responda apenas: SIM ou NAO
             """
 
+            img_upload = None
             try:
                 img_upload = Image.open(temp_img_path)
                 response = model.generate_content([prompt, img_upload])
@@ -1474,8 +1483,16 @@ class VerificadorGeorreferenciamento:
 
             except Exception as e:
                 print(f"Erro ao analisar página {i}: {e}")
+            finally:
+                # Fechar a imagem antes de deletar o arquivo
+                if img_upload:
+                    img_upload.close()
 
-            temp_img_path.unlink()
+            # Deletar arquivo temporário com tratamento de erro
+            try:
+                temp_img_path.unlink()
+            except Exception as e:
+                print(f"Aviso: Não foi possível deletar {temp_img_path}: {e}")
 
         # Extrair páginas
         if paginas_encontradas:
@@ -1520,6 +1537,7 @@ class VerificadorGeorreferenciamento:
             Responda apenas: SIM ou NAO
             """
 
+            img_upload = None
             try:
                 img_upload = Image.open(temp_img_path)
                 response = model.generate_content([prompt, img_upload])
@@ -1530,8 +1548,16 @@ class VerificadorGeorreferenciamento:
 
             except Exception as e:
                 print(f"Erro ao analisar página {i}: {e}")
+            finally:
+                # Fechar a imagem antes de deletar o arquivo
+                if img_upload:
+                    img_upload.close()
 
-            temp_img_path.unlink()
+            # Deletar arquivo temporário com tratamento de erro
+            try:
+                temp_img_path.unlink()
+            except Exception as e:
+                print(f"Aviso: Não foi possível deletar {temp_img_path}: {e}")
 
         # Extrair páginas
         if paginas_encontradas:
