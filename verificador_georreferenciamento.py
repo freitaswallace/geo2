@@ -285,7 +285,15 @@ class VerificadorGeorreferenciamento:
         ).pack(anchor=tk.W)
 
         # ===== BARRA DE FERRAMENTAS COM CARDS =====
-        toolbar_card = self._criar_card(main_frame)
+        # Card com borda destacada para ferramentas principais
+        toolbar_card = tk.Frame(
+            main_frame,
+            bg=self.colors['bg_card'],
+            highlightbackground=self.colors['primary'],
+            highlightthickness=3,
+            relief=tk.SOLID,
+            borderwidth=2
+        )
         toolbar_card.pack(fill=tk.X, pady=(0, 20), padx=25)
 
         toolbar_content = tk.Frame(toolbar_card, bg=self.colors['bg_card'])
@@ -847,7 +855,7 @@ class VerificadorGeorreferenciamento:
         """Abre janela para configurar API key."""
         config_window = tk.Toplevel(self.root)
         config_window.title("⚙️ Configuração da API Key")
-        config_window.geometry("650x300")
+        config_window.geometry("700x400")
         config_window.configure(bg=self.colors['bg_card'])
         config_window.transient(self.root)
         config_window.grab_set()
@@ -866,29 +874,38 @@ class VerificadorGeorreferenciamento:
 
         tk.Label(
             main_frame,
-            text="Insira sua API key abaixo. Ela será salva de forma segura e não precisará ser inserida novamente.",
+            text="Insira sua API key do Google Gemini abaixo.\nEla será salva de forma segura em seu computador.",
             font=('Inter', 10),
             fg=self.colors['text_medium'],
             bg=self.colors['bg_card'],
-            wraplength=550
+            justify=tk.CENTER
         ).pack(pady=10)
 
-        # Campo de entrada
+        # Campo de entrada com borda destacada
         api_var = tk.StringVar(value=self.config_manager.get_api_key())
 
-        entry_frame = tk.Frame(main_frame, bg=self.colors['bg_card'])
-        entry_frame.pack(fill=tk.X, pady=20)
+        entry_frame = tk.Frame(
+            main_frame,
+            bg=self.colors['bg_card'],
+            highlightbackground=self.colors['primary'],
+            highlightthickness=2,
+            relief=tk.SOLID
+        )
+        entry_frame.pack(fill=tk.X, pady=20, padx=10)
+
+        entry_content = tk.Frame(entry_frame, bg=self.colors['bg_card'])
+        entry_content.pack(fill=tk.X, padx=15, pady=15)
 
         tk.Label(
-            entry_frame,
+            entry_content,
             text="API Key:",
-            font=('Inter', 11, 'bold'),
+            font=('Inter', 12, 'bold'),
             fg=self.colors['text_dark'],
             bg=self.colors['bg_card']
-        ).pack(anchor=tk.W, pady=(0, 8))
+        ).pack(anchor=tk.W, pady=(0, 10))
 
         api_entry = tk.Entry(
-            entry_frame,
+            entry_content,
             textvariable=api_var,
             font=('Inter', 11),
             show="●",
@@ -899,9 +916,19 @@ class VerificadorGeorreferenciamento:
             borderwidth=2,
             highlightthickness=0
         )
-        api_entry.pack(fill=tk.X, ipady=10, ipadx=10)
+        api_entry.pack(fill=tk.X, ipady=12, ipadx=10)
+        api_entry.focus()
 
-        # Botões
+        # Instrução adicional
+        tk.Label(
+            main_frame,
+            text="💡 Depois de inserir a chave, clique em 'SALVAR CONFIGURAÇÃO' abaixo",
+            font=('Inter', 9, 'italic'),
+            fg=self.colors['info'],
+            bg=self.colors['bg_card']
+        ).pack(pady=(5, 15))
+
+        # Botões grandes e destacados
         btn_frame = tk.Frame(main_frame, bg=self.colors['bg_card'])
         btn_frame.pack(pady=20)
 
@@ -915,18 +942,21 @@ class VerificadorGeorreferenciamento:
             else:
                 messagebox.showwarning("⚠️ Aviso", "Por favor, insira uma API Key válida.")
 
+        # Botão de salvar grande e destacado
         tk.Button(
             btn_frame,
-            text="💾  Salvar",
+            text="💾  SALVAR CONFIGURAÇÃO",
             command=salvar_api,
-            font=('Inter', 11, 'bold'),
+            font=('Inter', 13, 'bold'),
             bg=self.colors['success'],
             fg='white',
             relief=tk.FLAT,
-            padx=25,
-            pady=10,
-            cursor='hand2'
-        ).pack(side=tk.LEFT, padx=5)
+            padx=40,
+            pady=15,
+            cursor='hand2',
+            activebackground='#059669',
+            activeforeground='white'
+        ).pack(side=tk.LEFT, padx=10)
 
         tk.Button(
             btn_frame,
@@ -936,10 +966,35 @@ class VerificadorGeorreferenciamento:
             bg=self.colors['text_medium'],
             fg='white',
             relief=tk.FLAT,
-            padx=25,
-            pady=10,
+            padx=30,
+            pady=15,
+            cursor='hand2',
+            activebackground='#4B5563',
+            activeforeground='white'
+        ).pack(side=tk.LEFT, padx=10)
+
+        # Link para obter API key
+        link_frame = tk.Frame(main_frame, bg=self.colors['bg_card'])
+        link_frame.pack(pady=(20, 0))
+
+        tk.Label(
+            link_frame,
+            text="❓ Não tem uma API Key?",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_card']
+        ).pack(side=tk.LEFT, padx=(0, 5))
+
+        link_label = tk.Label(
+            link_frame,
+            text="Clique aqui para obter",
+            font=('Inter', 9, 'bold', 'underline'),
+            fg=self.colors['info'],
+            bg=self.colors['bg_card'],
             cursor='hand2'
-        ).pack(side=tk.LEFT, padx=5)
+        )
+        link_label.pack(side=tk.LEFT)
+        link_label.bind('<Button-1>', lambda e: webbrowser.open('https://makersuite.google.com/app/apikey'))
 
     def _selecionar_arquivo(self, variavel, tipo):
         """Abre diálogo para selecionar arquivo PDF."""
