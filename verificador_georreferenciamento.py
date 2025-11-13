@@ -22,6 +22,7 @@ import webbrowser
 import math
 from datetime import datetime
 import configparser
+import time
 
 try:
     from pdf2image import convert_from_path
@@ -1473,20 +1474,49 @@ class VerificadorGeorreferenciamento:
             """
 
             img_upload = None
-            try:
-                img_upload = Image.open(temp_img_path)
-                response = model.generate_content([prompt, img_upload])
-                resposta = response.text.strip().upper()
+            tentativas = 0
+            max_tentativas = 3
 
-                if 'SIM' in resposta:
-                    paginas_encontradas.append(i)
+            while tentativas < max_tentativas:
+                try:
+                    img_upload = Image.open(temp_img_path)
+                    response = model.generate_content([prompt, img_upload])
+                    resposta = response.text.strip().upper()
 
-            except Exception as e:
-                print(f"Erro ao analisar página {i}: {e}")
-            finally:
-                # Fechar a imagem antes de deletar o arquivo
-                if img_upload:
-                    img_upload.close()
+                    if 'SIM' in resposta:
+                        paginas_encontradas.append(i)
+                    break  # Sucesso, sair do loop
+
+                except Exception as e:
+                    erro_str = str(e).lower()
+                    # Detectar erros de rate limit
+                    if '429' in erro_str or 'quota' in erro_str or 'rate limit' in erro_str or 'resource exhausted' in erro_str or 'resource has been exhausted' in erro_str:
+                        tentativas += 1
+                        tempo_espera = 60
+
+                        if tentativas < max_tentativas:
+                            # Atualizar pop-up informando o usuário
+                            if hasattr(self, 'progress_window') and self.progress_window:
+                                self.root.after(0, lambda: self._atualizar_progresso(
+                                    self.progress_bar['value'],
+                                    "⏸️ LIMITE DE API ATINGIDO",
+                                    f"Aguardando {tempo_espera}s para continuar... (Tentativa {tentativas}/{max_tentativas})"
+                                ))
+
+                            print(f"⚠️ Limite de API atingido. Pausando por {tempo_espera} segundos... (Tentativa {tentativas}/{max_tentativas})")
+                            time.sleep(tempo_espera)
+                        else:
+                            print(f"❌ Erro: Limite de API excedido após {max_tentativas} tentativas na página {i}")
+                            break
+                    else:
+                        # Outro tipo de erro
+                        print(f"Erro ao analisar página {i}: {e}")
+                        break
+                finally:
+                    # Fechar a imagem antes de deletar o arquivo
+                    if img_upload:
+                        img_upload.close()
+                        img_upload = None
 
             # Deletar arquivo temporário com tratamento de erro
             try:
@@ -1538,20 +1568,49 @@ class VerificadorGeorreferenciamento:
             """
 
             img_upload = None
-            try:
-                img_upload = Image.open(temp_img_path)
-                response = model.generate_content([prompt, img_upload])
-                resposta = response.text.strip().upper()
+            tentativas = 0
+            max_tentativas = 3
 
-                if 'SIM' in resposta:
-                    paginas_encontradas.append(i)
+            while tentativas < max_tentativas:
+                try:
+                    img_upload = Image.open(temp_img_path)
+                    response = model.generate_content([prompt, img_upload])
+                    resposta = response.text.strip().upper()
 
-            except Exception as e:
-                print(f"Erro ao analisar página {i}: {e}")
-            finally:
-                # Fechar a imagem antes de deletar o arquivo
-                if img_upload:
-                    img_upload.close()
+                    if 'SIM' in resposta:
+                        paginas_encontradas.append(i)
+                    break  # Sucesso, sair do loop
+
+                except Exception as e:
+                    erro_str = str(e).lower()
+                    # Detectar erros de rate limit
+                    if '429' in erro_str or 'quota' in erro_str or 'rate limit' in erro_str or 'resource exhausted' in erro_str or 'resource has been exhausted' in erro_str:
+                        tentativas += 1
+                        tempo_espera = 60
+
+                        if tentativas < max_tentativas:
+                            # Atualizar pop-up informando o usuário
+                            if hasattr(self, 'progress_window') and self.progress_window:
+                                self.root.after(0, lambda: self._atualizar_progresso(
+                                    self.progress_bar['value'],
+                                    "⏸️ LIMITE DE API ATINGIDO",
+                                    f"Aguardando {tempo_espera}s para continuar... (Tentativa {tentativas}/{max_tentativas})"
+                                ))
+
+                            print(f"⚠️ Limite de API atingido. Pausando por {tempo_espera} segundos... (Tentativa {tentativas}/{max_tentativas})")
+                            time.sleep(tempo_espera)
+                        else:
+                            print(f"❌ Erro: Limite de API excedido após {max_tentativas} tentativas na página {i}")
+                            break
+                    else:
+                        # Outro tipo de erro
+                        print(f"Erro ao analisar página {i}: {e}")
+                        break
+                finally:
+                    # Fechar a imagem antes de deletar o arquivo
+                    if img_upload:
+                        img_upload.close()
+                        img_upload = None
 
             # Deletar arquivo temporário com tratamento de erro
             try:
