@@ -95,6 +95,9 @@ class VerificadorGeorreferenciamento:
             except:
                 self.root.geometry("1450x980")  # Fallback
 
+        # Configurar handler para fechamento da janela
+        self.root.protocol("WM_DELETE_WINDOW", self._ao_fechar_aplicacao)
+
         # Gerenciador de configurações
         self.config_manager = ConfigManager()
 
@@ -390,6 +393,44 @@ class VerificadorGeorreferenciamento:
 
         vcmd = (self.root.register(self._validar_numero), '%P')
         prenotacao_entry.config(validate='key', validatecommand=vcmd)
+
+        # Separador vertical
+        tk.Frame(
+            toolbar_content,
+            width=2,
+            bg=self.colors['border']
+        ).pack(side=tk.LEFT, fill=tk.Y, padx=20)
+
+        # Botão Limpar Backups
+        limpar_frame = tk.Frame(toolbar_content, bg=self.colors['bg_card'])
+        limpar_frame.pack(side=tk.LEFT)
+
+        tk.Button(
+            limpar_frame,
+            text="🗑️  Limpar Backups",
+            command=self._limpar_arquivos_backup,
+            font=('Inter', 10, 'bold'),
+            bg=self.colors['danger'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2',
+            activebackground='#B91C1C',
+            highlightthickness=2,
+            highlightbackground=self.colors['danger'],
+            highlightcolor='#B91C1C'
+        ).pack()
+
+        # Status de limpeza
+        self.backup_status_label = tk.Label(
+            limpar_frame,
+            text="",
+            font=('Inter', 8),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_card']
+        )
+        self.backup_status_label.pack(pady=(5, 0))
 
         # ===== SELETOR DE MODO (CARDS GRANDES E BONITOS) =====
         modo_card = self._criar_card(main_frame)
@@ -1796,6 +1837,109 @@ class VerificadorGeorreferenciamento:
             print(f"❌ Erro ao salvar backups: {str(e)}")
             import traceback
             traceback.print_exc()
+
+    def _ao_fechar_aplicacao(self):
+        """Executado quando o usuário fecha a aplicação - limpa arquivos temporários."""
+        try:
+            # Deletar pasta temporária conferencia_geo_temp
+            temp_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+                print(f"🗑️ Pasta temporária deletada: {temp_dir}")
+        except Exception as e:
+            print(f"⚠️ Erro ao deletar pasta temporária: {e}")
+        finally:
+            # Fechar a aplicação
+            self.root.destroy()
+
+    def _limpar_arquivos_backup(self):
+        """Limpa todos os arquivos das pastas de backup PDF_INCRAS e PDF_PLANTAS."""
+        # Confirmar com o usuário
+        resposta = messagebox.askyesno(
+            "Confirmar Limpeza",
+            "Tem certeza que deseja deletar TODOS os arquivos de backup?\n\n"
+            "Isso irá remover todos os PDFs salvos nas pastas:\n"
+            "• PDF_INCRAS\n"
+            "• PDF_PLANTAS\n\n"
+            "Esta ação não pode ser desfeita!",
+            icon='warning'
+        )
+
+        if not resposta:
+            return
+
+        try:
+            # Tentar várias localizações comuns
+            possible_docs = [
+                Path.home() / "Documents",  # Inglês/Linux
+                Path.home() / "Documentos",  # Português
+                Path.home()  # Fallback
+            ]
+
+            docs_dir = None
+            for path in possible_docs:
+                relatorios_dir = path / "Relatórios INCRA"
+                if relatorios_dir.exists() and relatorios_dir.is_dir():
+                    docs_dir = relatorios_dir
+                    break
+
+            if docs_dir is None:
+                docs_dir = Path.home() / "Relatórios INCRA"
+
+            # Pastas a limpar
+            incra_dir = docs_dir / "PDF_INCRAS"
+            projeto_dir = docs_dir / "PDF_PLANTAS"
+
+            arquivos_deletados = 0
+
+            # Deletar arquivos da pasta INCRA
+            if incra_dir.exists():
+                for arquivo in incra_dir.glob("*.pdf"):
+                    try:
+                        arquivo.unlink()
+                        arquivos_deletados += 1
+                        print(f"🗑️ Deletado: {arquivo.name}")
+                    except Exception as e:
+                        print(f"⚠️ Erro ao deletar {arquivo.name}: {e}")
+
+            # Deletar arquivos da pasta PROJETO
+            if projeto_dir.exists():
+                for arquivo in projeto_dir.glob("*.pdf"):
+                    try:
+                        arquivo.unlink()
+                        arquivos_deletados += 1
+                        print(f"🗑️ Deletado: {arquivo.name}")
+                    except Exception as e:
+                        print(f"⚠️ Erro ao deletar {arquivo.name}: {e}")
+
+            # Atualizar status
+            if arquivos_deletados > 0:
+                self.backup_status_label.config(
+                    text=f"✅ {arquivos_deletados} arquivo(s) deletado(s)",
+                    fg=self.colors['success']
+                )
+                messagebox.showinfo(
+                    "Limpeza Concluída",
+                    f"✅ {arquivos_deletados} arquivo(s) de backup foram deletados com sucesso!"
+                )
+            else:
+                self.backup_status_label.config(
+                    text="ℹ️ Nenhum arquivo encontrado",
+                    fg=self.colors['info']
+                )
+                messagebox.showinfo(
+                    "Limpeza Concluída",
+                    "ℹ️ Nenhum arquivo de backup foi encontrado nas pastas."
+                )
+
+            # Limpar status após 5 segundos
+            self.root.after(5000, lambda: self.backup_status_label.config(text=""))
+
+        except Exception as e:
+            print(f"❌ Erro ao limpar backups: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("Erro", f"❌ Erro ao limpar backups:\n{str(e)}")
 
     def _gerar_previews(self):
         """Gera thumbnails dos documentos extraídos."""
