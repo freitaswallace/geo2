@@ -1,0 +1,15 @@
+# PyInstaller Build Artifacts
+build/
+dist/
+*.spec
+*.pyc
+__pycache__/
+
+# Poppler (deve ser baixado localmente)
+poppler/
+
+# Arquivos temporários
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

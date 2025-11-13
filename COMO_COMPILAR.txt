@@ -1,0 +1,49 @@
+═══════════════════════════════════════════════════════════════
+  🚀 GUIA RÁPIDO - COMPILAR PARA .EXE
+═══════════════════════════════════════════════════════════════
+
+📥 PASSO 1: BAIXAR POPPLER
+────────────────────────────────────────────────────────────────
+1. Acesse: https://github.com/oschwartz10612/poppler-windows/releases/
+2. Baixe o arquivo ZIP mais recente (ex: Release-24.07.0-0.zip)
+3. Extraia o ZIP
+4. Renomeie a pasta para "poppler"
+5. Coloque a pasta "poppler" aqui nesta mesma pasta do projeto
+
+
+📂 ESTRUTURA ESPERADA:
+────────────────────────────────────────────────────────────────
+geo2/
+├── verificador_georreferenciamento.py
+├── build_exe.bat                    👈 Execute este arquivo!
+├── COMO_COMPILAR.txt               👈 Você está aqui
+└── poppler/                         👈 Coloque aqui
+    └── Library/
+        └── bin/
+            ├── pdftoppm.exe
+            └── ...
+
+
+▶️ PASSO 2: EXECUTAR BUILD
+────────────────────────────────────────────────────────────────
+Simplesmente dê duplo clique em:
+
+    build_exe.bat
+
+O script fará tudo automaticamente!
+
+
+✅ PASSO 3: RESULTADO
+────────────────────────────────────────────────────────────────
+Após a compilação, você encontrará:
+
+    dist/VerificadorINCRA.exe
+
+Este arquivo .exe pode ser distribuído sozinho!
+Não precisa de Python instalado.
+Não precisa de Poppler separado.
+
+
+═══════════════════════════════════════════════════════════════
+
+Para instruções detalhadas, veja: BUILD_INSTRUCTIONS.md
