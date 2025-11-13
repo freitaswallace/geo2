@@ -290,9 +290,9 @@ class VerificadorGeorreferenciamento:
             main_frame,
             bg=self.colors['bg_card'],
             highlightbackground=self.colors['primary'],
-            highlightthickness=3,
+            highlightthickness=2,
             relief=tk.SOLID,
-            borderwidth=2
+            borderwidth=1
         )
         toolbar_card.pack(fill=tk.X, pady=(0, 20), padx=25)
 
@@ -855,7 +855,7 @@ class VerificadorGeorreferenciamento:
         """Abre janela para configurar API key."""
         config_window = tk.Toplevel(self.root)
         config_window.title("⚙️ Configuração da API Key")
-        config_window.geometry("700x400")
+        config_window.geometry("750x550")
         config_window.configure(bg=self.colors['bg_card'])
         config_window.transient(self.root)
         config_window.grab_set()
