@@ -785,6 +785,20 @@ class VerificadorGeorreferenciamento:
             cursor='hand2'
         ).pack(side=tk.RIGHT, padx=(10, 0))
 
+        # Botão Arquivos Separados para INCRA
+        tk.Button(
+            incra_input_frame,
+            text="📚 Arquivos Separados",
+            command=lambda: self._selecionar_multiplos_arquivos(self.incra_path, "INCRA"),
+            font=('Inter', 9, 'bold'),
+            bg='#D97706',
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2'
+        ).pack(side=tk.RIGHT, padx=(10, 0))
+
         # Seleção Projeto
         projeto_card = tk.Frame(
             content,
@@ -829,6 +843,20 @@ class VerificadorGeorreferenciamento:
             fg='white',
             relief=tk.FLAT,
             padx=20,
+            pady=8,
+            cursor='hand2'
+        ).pack(side=tk.RIGHT, padx=(10, 0))
+
+        # Botão Arquivos Separados para Projeto
+        tk.Button(
+            projeto_input_frame,
+            text="📚 Arquivos Separados",
+            command=lambda: self._selecionar_multiplos_arquivos(self.projeto_path, "Projeto"),
+            font=('Inter', 9, 'bold'),
+            bg='#2563EB',
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
             pady=8,
             cursor='hand2'
         ).pack(side=tk.RIGHT, padx=(10, 0))
@@ -1138,6 +1166,61 @@ class VerificadorGeorreferenciamento:
         )
         if filename:
             variavel.set(filename)
+
+    def _selecionar_multiplos_arquivos(self, variavel, tipo):
+        """Abre diálogo para selecionar múltiplos arquivos PDF e faz o merge."""
+        filenames = filedialog.askopenfilenames(
+            title=f"Selecionar múltiplos arquivos {tipo} (serão mesclados)",
+            filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")]
+        )
+
+        if filenames and len(filenames) > 0:
+            if len(filenames) == 1:
+                # Se selecionou apenas um arquivo, não precisa fazer merge
+                variavel.set(filenames[0])
+                messagebox.showinfo("Arquivo Selecionado", f"1 arquivo selecionado para {tipo}.")
+            else:
+                # Fazer merge dos PDFs
+                try:
+                    output_path = self._merge_pdfs(list(filenames), tipo)
+                    variavel.set(output_path)
+                    messagebox.showinfo(
+                        "Arquivos Mesclados",
+                        f"{len(filenames)} arquivos foram mesclados com sucesso!\n\nArquivo final: {Path(output_path).name}"
+                    )
+                except Exception as e:
+                    messagebox.showerror("Erro ao Mesclar", f"Erro ao mesclar arquivos:\n{e}")
+
+    def _merge_pdfs(self, pdf_files: List[str], tipo: str) -> str:
+        """Mescla múltiplos arquivos PDF em um único arquivo."""
+        output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Nome do arquivo de saída
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{tipo.lower()}_mesclado_{timestamp}.pdf"
+        output_path = output_dir / output_filename
+
+        # Criar o merger
+        pdf_merger = PyPDF2.PdfMerger()
+
+        try:
+            # Adicionar cada PDF ao merger
+            for pdf_file in pdf_files:
+                pdf_merger.append(pdf_file)
+
+            # Escrever o arquivo mesclado
+            with open(output_path, 'wb') as output_file:
+                pdf_merger.write(output_file)
+
+            pdf_merger.close()
+
+            print(f"✅ {len(pdf_files)} arquivos mesclados em: {output_path}")
+            return str(output_path)
+
+        except Exception as e:
+            pdf_merger.close()
+            raise e
 
     def _atualizar_status(self, mensagem: str):
         """Atualiza a barra de status."""
@@ -1464,11 +1547,20 @@ class VerificadorGeorreferenciamento:
             Analise esta imagem e responda apenas com 'SIM' ou 'NAO':
             Esta página contém o Memorial Descritivo do INCRA?
 
-            Características do Memorial INCRA:
-            - Texto: "MINISTÉRIO DA AGRICULTURA, PECUÁRIA E ABASTECIMENTO"
-            - Texto: "INSTITUTO NACIONAL DE COLONIZAÇÃO E REFORMA AGRÁRIA"
-            - Texto: "MEMORIAL DESCRITIVO"
-            - Tabela com colunas: "VÉRTICE", "SEGMENTO VANTE", "Confrontações"
+            CRITÉRIOS DE IDENTIFICAÇÃO (Todos devem estar presentes):
+
+            1. CABEÇALHO OFICIAL DO INCRA (Topo da Página):
+               - Deve conter: "MINISTÉRIO DA AGRICULTURA, PECUÁRIA E ABASTECIMENTO"
+               - Logo abaixo: "INSTITUTO NACIONAL DE COLONIZAÇÃO E REFORMA AGRÁRIA"
+               - Título em destaque: "MEMORIAL DESCRITIVO"
+               - Dados do Imóvel: "Denominação:", "Proprietário(a):", "Matrícula do imóvel:", "Município/UF:"
+
+            2. MARCADOR DE INÍCIO DA TABELA (Gatilho/Anchor):
+               - Procure pelo subtítulo em MAIÚSCULAS: "DESCRIÇÃO DA PARCELA"
+               - Imediatamente abaixo, deve haver cabeçalho da tabela com as colunas:
+                 "VÉRTICE", "Longitude", "Latitude", "SEGMENTO VANTE"
+
+            IMPORTANTE: A página deve conter TANTO o cabeçalho oficial quanto o marcador de início da tabela.
 
             Responda apenas: SIM ou NAO
             """
@@ -1559,10 +1651,28 @@ class VerificadorGeorreferenciamento:
             Analise esta imagem e responda apenas com 'SIM' ou 'NAO':
             Esta página contém a Planta/Projeto de Georreferenciamento?
 
-            Características da Planta/Projeto:
-            - Títulos: "PLANTA DO IMÓVEL GEORREFERENCIADO" ou "PLANTA DE SITUAÇÃO"
-            - Identificadores: "Código INCRA:", "Matrícula nº:", "Responsável técnico:"
-            - Tabela com coordenadas (colunas: "Código", "Longitude", "Latitude")
+            CRITÉRIOS DE IDENTIFICAÇÃO DA PLANTA TÉCNICA:
+
+            1. PALAVRAS-CHAVE VISUAIS (no topo ou laterais):
+               - "PLANTA DE SITUAÇÃO" ou "PLANTA DO IMÓVEL" ou "PLANTA DO IMÓVEL GEORREFERENCIADO"
+
+            2. ELEMENTO DE MAPA:
+               - Referências a provedores de mapas: palavra "Google" (geralmente no canto inferior)
+               - Ou texto "Imagem de Satélite"
+               - Desenho técnico com linhas vetoriais representando um polígono (terreno)
+
+            3. TABELA DE COORDENADAS (Busca Flexível - pode estar na esquerda, direita ou embaixo):
+               - Cabeçalho da tabela deve conter palavras próximas:
+                 * "VÉRTICE" (ou "Vért", "Pt")
+                 * "AZIMUTE" (ou "Azim")
+                 * "DISTÂNCIA" (ou "Dist", "Dist. (m)")
+                 * "COORDENADAS" (ou "Latitude/Longitude" ou "N/E")
+               - Título da tabela pode ser: "Tabela de Coordenadas", "Memorial Analítico", "Dados da Poligonal"
+
+            4. CRITÉRIO DE PARADA (para não confundir com outras seções):
+               - NÃO deve ser página de "CONVENÇÕES", "DECLARAÇÃO", "ASSINATURAS" ou "ESCALA"
+
+            IMPORTANTE: A página deve ser uma Planta Técnica com mapa E tabela de coordenadas.
 
             Responda apenas: SIM ou NAO
             """
