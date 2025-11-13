@@ -24,6 +24,33 @@ from datetime import datetime
 import configparser
 import time
 
+
+def get_poppler_path():
+    """
+    Detecta o caminho do Poppler, seja rodando como script ou executável.
+
+    Quando compilado com PyInstaller, o Poppler está em sys._MEIPASS/poppler/bin
+    Quando rodando como script, retorna None (usa instalação do sistema)
+    """
+    if getattr(sys, 'frozen', False):
+        # Rodando como executável PyInstaller
+        base_path = Path(sys._MEIPASS)
+        poppler_path = base_path / 'poppler' / 'bin'
+        if poppler_path.exists():
+            print(f"✅ Poppler embutido encontrado em: {poppler_path}")
+            return str(poppler_path)
+        else:
+            print(f"⚠️ Poppler não encontrado em: {poppler_path}")
+            return None
+    else:
+        # Rodando como script Python
+        print("ℹ️ Usando Poppler do sistema")
+        return None
+
+
+# Detectar caminho do Poppler globalmente
+POPPLER_PATH = get_poppler_path()
+
 try:
     from pdf2image import convert_from_path
     from PIL import Image, ImageTk
@@ -1603,7 +1630,7 @@ class VerificadorGeorreferenciamento:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
-        images = convert_from_path(pdf_path, dpi=150)
+        images = convert_from_path(pdf_path, dpi=150, poppler_path=POPPLER_PATH)
         paginas_encontradas = []
 
         for i, img in enumerate(images):
@@ -1707,7 +1734,7 @@ class VerificadorGeorreferenciamento:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
-        images = convert_from_path(pdf_path, dpi=150)
+        images = convert_from_path(pdf_path, dpi=150, poppler_path=POPPLER_PATH)
         paginas_encontradas = []
 
         for i, img in enumerate(images):
@@ -1970,7 +1997,7 @@ class VerificadorGeorreferenciamento:
     def _gerar_previews(self):
         """Gera thumbnails dos documentos extraídos."""
         if self.pdf_extraido_incra and Path(self.pdf_extraido_incra).exists():
-            images = convert_from_path(self.pdf_extraido_incra, dpi=100, first_page=1, last_page=1)
+            images = convert_from_path(self.pdf_extraido_incra, dpi=100, first_page=1, last_page=1, poppler_path=POPPLER_PATH)
             if images:
                 self.preview_incra_image = images[0]
                 self.preview_incra_image.thumbnail((300, 400))
@@ -1980,7 +2007,7 @@ class VerificadorGeorreferenciamento:
                 self.incra_preview_label.image = photo
 
         if self.pdf_extraido_projeto and Path(self.pdf_extraido_projeto).exists():
-            images = convert_from_path(self.pdf_extraido_projeto, dpi=100, first_page=1, last_page=1)
+            images = convert_from_path(self.pdf_extraido_projeto, dpi=100, first_page=1, last_page=1, poppler_path=POPPLER_PATH)
             if images:
                 self.preview_projeto_image = images[0]
                 self.preview_projeto_image.thumbnail((300, 400))
