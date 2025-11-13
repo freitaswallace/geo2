@@ -1450,7 +1450,7 @@ class VerificadorGeorreferenciamento:
         # Usar Gemini 2.0 Flash Experimental
         api_key = self.config_manager.get_api_key()
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
         images = convert_from_path(pdf_path, dpi=150)
         paginas_encontradas = []
@@ -1516,7 +1516,7 @@ class VerificadorGeorreferenciamento:
         # Usar Gemini 2.0 Flash Experimental
         api_key = self.config_manager.get_api_key()
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
         images = convert_from_path(pdf_path, dpi=150)
         paginas_encontradas = []
