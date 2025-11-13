@@ -107,6 +107,12 @@ class VerificadorGeorreferenciamento:
         self.preview_incra_image: Optional[Image.Image] = None
         self.preview_projeto_image: Optional[Image.Image] = None
 
+        # Variáveis para janela de progresso
+        self.progress_window = None
+        self.progress_bar = None
+        self.progress_label = None
+        self.progress_detail_label = None
+
         # Configurar estilo moderno
         self._configurar_estilo()
 
@@ -851,6 +857,125 @@ class VerificadorGeorreferenciamento:
                 fg=self.colors['danger']
             )
 
+    def _criar_janela_progresso(self, titulo="Processando..."):
+        """Cria janela de progresso com barra e informações."""
+        if self.progress_window is not None:
+            try:
+                self.progress_window.destroy()
+            except:
+                pass
+
+        self.progress_window = tk.Toplevel(self.root)
+        self.progress_window.title(titulo)
+        self.progress_window.geometry("600x300")
+        self.progress_window.configure(bg=self.colors['bg_card'])
+        self.progress_window.transient(self.root)
+        self.progress_window.grab_set()
+        self.progress_window.resizable(False, False)
+
+        # Centralizar na tela
+        self.progress_window.update_idletasks()
+        x = (self.progress_window.winfo_screenwidth() // 2) - (600 // 2)
+        y = (self.progress_window.winfo_screenheight() // 2) - (300 // 2)
+        self.progress_window.geometry(f"600x300+{x}+{y}")
+
+        # Desabilitar fechar a janela
+        self.progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        # Frame principal
+        main_frame = tk.Frame(self.progress_window, bg=self.colors['bg_card'])
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=40, pady=40)
+
+        # Ícone e título
+        icon_label = tk.Label(
+            main_frame,
+            text="⏳",
+            font=('Segoe UI Emoji', 48),
+            bg=self.colors['bg_card']
+        )
+        icon_label.pack(pady=(0, 20))
+
+        # Label de status principal
+        self.progress_label = tk.Label(
+            main_frame,
+            text="Iniciando processamento...",
+            font=('Inter', 14, 'bold'),
+            fg=self.colors['primary'],
+            bg=self.colors['bg_card']
+        )
+        self.progress_label.pack(pady=(0, 10))
+
+        # Label de detalhes
+        self.progress_detail_label = tk.Label(
+            main_frame,
+            text="",
+            font=('Inter', 10),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_card'],
+            wraplength=500
+        )
+        self.progress_detail_label.pack(pady=(0, 25))
+
+        # Frame para barra de progresso
+        progress_frame = tk.Frame(main_frame, bg=self.colors['bg_card'])
+        progress_frame.pack(fill=tk.X, pady=(0, 10))
+
+        # Barra de progresso
+        style = ttk.Style()
+        style.configure(
+            "Custom.Horizontal.TProgressbar",
+            troughcolor='#E5E7EB',
+            background=self.colors['primary'],
+            bordercolor=self.colors['border'],
+            lightcolor=self.colors['primary'],
+            darkcolor=self.colors['primary_dark']
+        )
+
+        self.progress_bar = ttk.Progressbar(
+            progress_frame,
+            style="Custom.Horizontal.TProgressbar",
+            orient='horizontal',
+            length=500,
+            mode='determinate',
+            maximum=100
+        )
+        self.progress_bar.pack()
+
+        # Porcentagem
+        self.progress_percent_label = tk.Label(
+            main_frame,
+            text="0%",
+            font=('Inter', 11, 'bold'),
+            fg=self.colors['primary'],
+            bg=self.colors['bg_card']
+        )
+        self.progress_percent_label.pack()
+
+        # Forçar atualização
+        self.progress_window.update()
+
+    def _atualizar_progresso(self, porcentagem: int, texto: str, detalhe: str = ""):
+        """Atualiza a janela de progresso."""
+        if self.progress_window and self.progress_window.winfo_exists():
+            try:
+                self.progress_bar['value'] = porcentagem
+                self.progress_label.config(text=texto)
+                self.progress_detail_label.config(text=detalhe)
+                self.progress_percent_label.config(text=f"{porcentagem}%")
+                self.progress_window.update()
+            except:
+                pass
+
+    def _fechar_janela_progresso(self):
+        """Fecha a janela de progresso."""
+        if self.progress_window:
+            try:
+                self.progress_window.grab_release()
+                self.progress_window.destroy()
+                self.progress_window = None
+            except:
+                pass
+
     def _abrir_config_api(self):
         """Abre janela para configurar API key."""
         config_window = tk.Toplevel(self.root)
@@ -1038,35 +1163,77 @@ class VerificadorGeorreferenciamento:
         def executar():
             try:
                 self._desabilitar_botoes()
+
+                # Criar janela de progresso
+                self._criar_janela_progresso("Comparação em Andamento")
+
+                # Etapa 1: Preparação (0-10%)
+                self._atualizar_progresso(
+                    5,
+                    "Preparando para processar...",
+                    "Verificando arquivos e configurações iniciais"
+                )
                 self._atualizar_status("🔄 Processando documentos...")
 
-                # Extrair dados para Excel
+                # Etapa 2: Extrair dados INCRA (10-40%)
+                self._atualizar_progresso(
+                    15,
+                    "Extraindo dados do INCRA...",
+                    "Lendo PDF do INCRA e convertendo para Excel usando IA"
+                )
                 self._atualizar_status("📄 Extraindo dados do INCRA...")
                 self.incra_excel_path, self.incra_data = self._extrair_pdf_para_excel(
                     self.incra_path.get(), "incra"
                 )
+                self._atualizar_progresso(40, "INCRA extraído com sucesso!", "")
 
+                # Etapa 3: Extrair dados Projeto (40-70%)
+                self._atualizar_progresso(
+                    45,
+                    "Extraindo dados do Projeto...",
+                    "Lendo PDF do Projeto/Planta e convertendo para Excel usando IA"
+                )
                 self._atualizar_status("📐 Extraindo dados do Projeto...")
                 self.projeto_excel_path, self.projeto_data = self._extrair_pdf_para_excel(
                     self.projeto_path.get(), "normal"
                 )
+                self._atualizar_progresso(70, "Projeto extraído com sucesso!", "")
 
-                # Gerar relatório
+                # Etapa 4: Gerar relatório (70-90%)
+                self._atualizar_progresso(
+                    75,
+                    "Gerando relatório de comparação...",
+                    "Comparando vértices e segmentos entre INCRA e Projeto"
+                )
                 self._atualizar_status("📊 Gerando relatório de comparação...")
                 relatorio = self._construir_relatorio_comparacao(True, False)
+                self._atualizar_progresso(85, "Relatório gerado!", "")
 
-                # Salvar e abrir relatório
+                # Etapa 5: Salvar e abrir (90-100%)
+                self._atualizar_progresso(
+                    90,
+                    "Salvando relatório...",
+                    "Salvando arquivo HTML e abrindo no navegador"
+                )
                 self._salvar_e_abrir_relatorio(relatorio)
 
                 # Mostrar resumo
+                self._atualizar_progresso(95, "Finalizando...", "Atualizando interface")
                 self._mostrar_resumo_no_texto()
 
+                # Concluído
+                self._atualizar_progresso(100, "✅ Concluído!", "Comparação realizada com sucesso")
                 self._atualizar_status("✅ Comparação concluída com sucesso!")
+
+                # Esperar 1.5 segundos para o usuário ver a conclusão
+                import time
+                time.sleep(1.5)
 
             except Exception as e:
                 self._atualizar_status(f"❌ Erro: {str(e)}")
                 messagebox.showerror("Erro", f"Erro ao processar documentos:\n\n{str(e)}")
             finally:
+                self._fechar_janela_progresso()
                 self._habilitar_botoes()
 
         # Executar em thread separada
@@ -1104,38 +1271,94 @@ class VerificadorGeorreferenciamento:
             try:
                 self._desabilitar_botoes()
 
-                # 1. Buscar arquivo TIFF
+                # Criar janela de progresso
+                self._criar_janela_progresso("Busca Automática em Andamento")
+
+                # Etapa 1: Buscar arquivo TIFF (0-15%)
+                self._atualizar_progresso(
+                    5,
+                    "Buscando arquivo TIFF na rede...",
+                    f"Procurando documento na rede do cartório (Prenotação: {self.numero_prenotacao.get()})"
+                )
                 self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
                 tiff_path = self._buscar_arquivo_tiff()
 
                 if not tiff_path:
                     raise Exception("Arquivo TIFF não encontrado na rede.")
 
-                # 2. Copiar e converter para PDF
+                self._atualizar_progresso(15, "Arquivo encontrado!", f"Localizado: {tiff_path}")
+
+                # Etapa 2: Converter para PDF (15-25%)
+                self._atualizar_progresso(
+                    18,
+                    "Convertendo TIFF para PDF...",
+                    "Copiando arquivo e convertendo formato"
+                )
                 self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
                 pdf_path = self._converter_tiff_para_pdf(tiff_path)
+                self._atualizar_progresso(25, "PDF criado com sucesso!", "")
 
-                # 3. Extrair documentos do PDF
+                # Etapa 3: Extrair Memorial INCRA (25-50%)
+                self._atualizar_progresso(
+                    30,
+                    "Extraindo Memorial INCRA...",
+                    "Usando IA para identificar e extrair páginas do Memorial INCRA"
+                )
                 self._atualizar_status("📄 Extraindo Memorial INCRA...")
                 self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+                self._atualizar_progresso(50, "Memorial INCRA extraído!", "")
 
+                # Etapa 4: Extrair Planta/Projeto (50-75%)
+                self._atualizar_progresso(
+                    55,
+                    "Extraindo Planta/Projeto...",
+                    "Usando IA para identificar e extrair páginas da Planta/Projeto"
+                )
                 self._atualizar_status("📐 Extraindo Planta/Projeto...")
                 self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+                self._atualizar_progresso(75, "Planta/Projeto extraída!", "")
 
-                # 4. Salvar backups
+                # Etapa 5: Salvar backups (75-85%)
+                self._atualizar_progresso(
+                    80,
+                    "Salvando backups...",
+                    "Criando cópias de segurança dos PDFs extraídos"
+                )
                 self._atualizar_status("💾 Salvando backups...")
                 self._salvar_backups_pdfs()
+                self._atualizar_progresso(85, "Backups salvos!", "")
 
-                # 5. Gerar previews
+                # Etapa 6: Gerar previews (85-100%)
+                self._atualizar_progresso(
+                    90,
+                    "Gerando prévias...",
+                    "Criando miniaturas dos documentos para visualização"
+                )
                 self._atualizar_status("👁️ Gerando prévias...")
                 self._gerar_previews()
+                self._atualizar_progresso(95, "Prévias geradas!", "")
 
-                # 6. Mostrar frame de preview
+                # Concluído
+                self._atualizar_progresso(
+                    100,
+                    "✅ Documentos extraídos!",
+                    "Verifique as prévias e confirme para continuar"
+                )
+
+                # Esperar 1 segundo para o usuário ver a conclusão
+                import time
+                time.sleep(1)
+
+                # Fechar janela de progresso
+                self._fechar_janela_progresso()
+
+                # Mostrar frame de preview
                 self.preview_frame.pack(fill=tk.BOTH, expand=True, pady=20)
 
                 self._atualizar_status("✅ Documentos extraídos! Verifique as prévias.")
 
             except Exception as e:
+                self._fechar_janela_progresso()
                 self._atualizar_status(f"❌ Erro: {str(e)}")
                 messagebox.showerror("Erro", f"Erro no modo automático:\n\n{str(e)}")
                 self._habilitar_botoes()
