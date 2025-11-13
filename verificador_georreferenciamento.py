@@ -401,36 +401,62 @@ class VerificadorGeorreferenciamento:
             bg=self.colors['border']
         ).pack(side=tk.LEFT, fill=tk.Y, padx=20)
 
-        # Botão Limpar Backups
+        # Botão Limpar Backups (redesenhado)
         limpar_frame = tk.Frame(toolbar_content, bg=self.colors['bg_card'])
-        limpar_frame.pack(side=tk.LEFT)
+        limpar_frame.pack(side=tk.LEFT, padx=(0, 10))
 
-        tk.Button(
-            limpar_frame,
-            text="🗑️  Limpar Backups",
+        # Container para centralizar conteúdo
+        limpar_content = tk.Frame(limpar_frame, bg=self.colors['bg_card'])
+        limpar_content.pack()
+
+        # Ícone e botão em um frame
+        btn_container = tk.Frame(limpar_content, bg=self.colors['bg_card'])
+        btn_container.pack()
+
+        # Ícone decorativo
+        tk.Label(
+            btn_container,
+            text="🗑️",
+            font=('Segoe UI Emoji', 16),
+            bg=self.colors['bg_card']
+        ).pack(side=tk.LEFT, padx=(0, 8))
+
+        # Botão com design melhorado
+        limpar_btn = tk.Button(
+            btn_container,
+            text="Limpar Backups",
             command=self._limpar_arquivos_backup,
-            font=('Inter', 10, 'bold'),
-            bg=self.colors['danger'],
+            font=('Inter', 9, 'bold'),
+            bg='#DC2626',
             fg='white',
             relief=tk.FLAT,
-            padx=15,
-            pady=8,
+            padx=12,
+            pady=6,
             cursor='hand2',
             activebackground='#B91C1C',
-            highlightthickness=2,
-            highlightbackground=self.colors['danger'],
-            highlightcolor='#B91C1C'
-        ).pack()
+            highlightthickness=0
+        )
+        limpar_btn.pack(side=tk.LEFT)
 
-        # Status de limpeza
+        # Efeito hover
+        def on_enter(e):
+            limpar_btn.config(bg='#B91C1C')
+
+        def on_leave(e):
+            limpar_btn.config(bg='#DC2626')
+
+        limpar_btn.bind('<Enter>', on_enter)
+        limpar_btn.bind('<Leave>', on_leave)
+
+        # Status de limpeza (mais discreto)
         self.backup_status_label = tk.Label(
-            limpar_frame,
+            limpar_content,
             text="",
-            font=('Inter', 8),
+            font=('Inter', 7),
             fg=self.colors['text_medium'],
             bg=self.colors['bg_card']
         )
-        self.backup_status_label.pack(pady=(5, 0))
+        self.backup_status_label.pack(pady=(3, 0))
 
         # ===== SELETOR DE MODO (CARDS GRANDES E BONITOS) =====
         modo_card = self._criar_card(main_frame)
