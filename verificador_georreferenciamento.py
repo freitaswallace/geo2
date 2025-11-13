@@ -1326,7 +1326,21 @@ class VerificadorGeorreferenciamento:
 
     def _salvar_backups_pdfs(self):
         """Salva backups dos PDFs extraídos."""
-        docs_dir = Path.home() / "Documentos" / "Relatórios INCRA"
+        # Tentar várias localizações comuns
+        possible_docs = [
+            Path.home() / "Documents",  # Inglês/Linux
+            Path.home() / "Documentos",  # Português
+            Path.home()  # Fallback
+        ]
+
+        docs_dir = None
+        for path in possible_docs:
+            if path.exists():
+                docs_dir = path / "Relatórios INCRA"
+                break
+
+        if docs_dir is None:
+            docs_dir = Path.home() / "Relatórios INCRA"
 
         incra_dir = docs_dir / "PDF_INCRAS"
         projeto_dir = docs_dir / "PDF_PLANTAS"
@@ -1340,10 +1354,12 @@ class VerificadorGeorreferenciamento:
         if self.pdf_extraido_incra:
             dest_incra = incra_dir / f"INCRA_{numero}_{timestamp}.pdf"
             shutil.copy2(self.pdf_extraido_incra, dest_incra)
+            print(f"✅ PDF INCRA salvo em: {dest_incra}")
 
         if self.pdf_extraido_projeto:
             dest_projeto = projeto_dir / f"PROJETO_{numero}_{timestamp}.pdf"
             shutil.copy2(self.pdf_extraido_projeto, dest_projeto)
+            print(f"✅ PDF PROJETO salvo em: {dest_projeto}")
 
     def _gerar_previews(self):
         """Gera thumbnails dos documentos extraídos."""
@@ -1599,12 +1615,18 @@ class VerificadorGeorreferenciamento:
         diferencas_vertice = 0
         identicos_segmento = 0
         diferencas_segmento = 0
+        vertices_com_diferenca = []
 
-        # VÉRTICE
-        html.append('<h2 class="section-title">📐 COMPARAÇÃO: VÉRTICE</h2>')
+        # VÉRTICE - Formato reorganizado e mais claro
+        html.append('<h2 class="section-title">📐 COMPARAÇÃO DE VÉRTICES</h2>')
+        html.append('<p style="color: #666; margin-bottom: 20px;">Cada bloco representa um vértice completo com todas as suas coordenadas</p>')
         html.append('<table>')
         html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>PROJETO</th><th>Status</th>')
+        html.append('<th style="width: 80px;">Vértice</th>')
+        html.append('<th style="width: 150px;">Coluna</th>')
+        html.append('<th style="width: 35%;">INCRA</th>')
+        html.append('<th style="width: 35%;">PROJETO</th>')
+        html.append('<th style="width: 120px;">Status</th>')
         html.append('</tr></thead><tbody>')
 
         max_rows = max(len(dados_incra), len(dados_projeto))
@@ -1625,14 +1647,22 @@ class VerificadorGeorreferenciamento:
             alt_incra = self._limpar_string(incra_row[3] if len(incra_row) > 3 else "")
             alt_projeto = self._limpar_string(projeto_row[3] if len(projeto_row) > 3 else "")
 
+            # Lista de campos para este vértice
             campos = [
-                ("Código", codigo_incra, codigo_projeto),
-                ("Longitude", long_incra, long_projeto),
-                ("Latitude", lat_incra, lat_projeto),
-                ("Altitude", alt_incra, alt_projeto)
+                ("CÓDIGO", codigo_incra, codigo_projeto, "Col A"),
+                ("LONGITUDE", long_incra, long_projeto, "Col B"),
+                ("LATITUDE", lat_incra, lat_projeto, "Col C"),
+                ("ALTITUDE", alt_incra, alt_projeto, "Col D")
             ]
 
-            for campo, val_incra, val_projeto in campos:
+            vertice_tem_diferenca = False
+
+            # Adicionar linha de separação visual entre vértices
+            if i > 1:
+                html.append('<tr style="height: 3px; background: #667eea;"><td colspan="5"></td></tr>')
+
+            # Iterar pelos campos deste vértice
+            for idx, (campo, val_incra, val_projeto, col_name) in enumerate(campos):
                 status_classe = "identico" if val_incra == val_projeto else "diferente"
                 status_texto = "✅ Idêntico" if val_incra == val_projeto else "❌ Diferente"
 
@@ -1640,19 +1670,36 @@ class VerificadorGeorreferenciamento:
                     identicos_vertice += 1
                 else:
                     diferencas_vertice += 1
+                    vertice_tem_diferenca = True
 
                 html.append(f'<tr class="{status_classe}">')
-                html.append(f'<td>{i}</td><td><strong>{campo}</strong></td>')
-                html.append(f'<td>{val_incra}</td><td>{val_projeto}</td><td>{status_texto}</td>')
+
+                # Mostrar número do vértice apenas na primeira linha
+                if idx == 0:
+                    html.append(f'<td rowspan="4" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #667eea;">#{i}</td>')
+
+                html.append(f'<td><strong>{campo}</strong><br><span style="font-size: 11px; color: #999;">{col_name}</span></td>')
+                html.append(f'<td>{val_incra}</td>')
+                html.append(f'<td>{val_projeto}</td>')
+                html.append(f'<td style="text-align: center;">{status_texto}</td>')
                 html.append('</tr>')
+
+            if vertice_tem_diferenca:
+                vertices_com_diferenca.append(i)
 
         html.append('</tbody></table>')
 
-        # SEGMENTO VANTE
-        html.append('<h2 class="section-title">🔄 COMPARAÇÃO: SEGMENTO VANTE</h2>')
+        # SEGMENTO VANTE - Formato reorganizado e mais claro
+        segmentos_com_diferenca = []
+        html.append('<h2 class="section-title">🔄 COMPARAÇÃO DE SEGMENTOS VANTE</h2>')
+        html.append('<p style="color: #666; margin-bottom: 20px;">Cada bloco representa um segmento completo com todas as suas medidas</p>')
         html.append('<table>')
         html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>PROJETO</th><th>Status</th>')
+        html.append('<th style="width: 80px;">Segmento</th>')
+        html.append('<th style="width: 150px;">Coluna</th>')
+        html.append('<th style="width: 35%;">INCRA</th>')
+        html.append('<th style="width: 35%;">PROJETO</th>')
+        html.append('<th style="width: 120px;">Status</th>')
         html.append('</tr></thead><tbody>')
 
         for i in range(1, max_rows):
@@ -1669,12 +1716,18 @@ class VerificadorGeorreferenciamento:
             dist_projeto = self._limpar_string(projeto_row[6] if len(projeto_row) > 6 else "")
 
             campos = [
-                ("Código", cod_seg_incra, cod_seg_projeto),
-                ("Azimute", azim_incra, azim_projeto),
-                ("Distância", dist_incra, dist_projeto)
+                ("CÓDIGO", cod_seg_incra, cod_seg_projeto, "Col E"),
+                ("AZIMUTE", azim_incra, azim_projeto, "Col F"),
+                ("DISTÂNCIA", dist_incra, dist_projeto, "Col G")
             ]
 
-            for campo, val_incra, val_projeto in campos:
+            segmento_tem_diferenca = False
+
+            # Adicionar linha de separação visual entre segmentos
+            if i > 1:
+                html.append('<tr style="height: 3px; background: #667eea;"><td colspan="5"></td></tr>')
+
+            for idx, (campo, val_incra, val_projeto, col_name) in enumerate(campos):
                 status_classe = "identico" if val_incra == val_projeto else "diferente"
                 status_texto = "✅ Idêntico" if val_incra == val_projeto else "❌ Diferente"
 
@@ -1682,11 +1735,22 @@ class VerificadorGeorreferenciamento:
                     identicos_segmento += 1
                 else:
                     diferencas_segmento += 1
+                    segmento_tem_diferenca = True
 
                 html.append(f'<tr class="{status_classe}">')
-                html.append(f'<td>{i}</td><td><strong>{campo}</strong></td>')
-                html.append(f'<td>{val_incra}</td><td>{val_projeto}</td><td>{status_texto}</td>')
+
+                # Mostrar número do segmento apenas na primeira linha
+                if idx == 0:
+                    html.append(f'<td rowspan="3" style="text-align: center; font-size: 18px; font-weight: bold; background: #f0f0f0; border-right: 3px solid #667eea;">#{i}</td>')
+
+                html.append(f'<td><strong>{campo}</strong><br><span style="font-size: 11px; color: #999;">{col_name}</span></td>')
+                html.append(f'<td>{val_incra}</td>')
+                html.append(f'<td>{val_projeto}</td>')
+                html.append(f'<td style="text-align: center;">{status_texto}</td>')
                 html.append('</tr>')
+
+            if segmento_tem_diferenca:
+                segmentos_com_diferenca.append(i)
 
         html.append('</tbody></table>')
 
@@ -1694,18 +1758,28 @@ class VerificadorGeorreferenciamento:
         identicos_total = identicos_vertice + identicos_segmento
         diferencas_total = diferencas_vertice + diferencas_segmento
 
+        # Criar lista de vértices e segmentos com diferenças
+        vertices_str = ", ".join([f"#{v}" for v in vertices_com_diferenca]) if vertices_com_diferenca else "Nenhum"
+        segmentos_str = ", ".join([f"#{s}" for s in segmentos_com_diferenca]) if segmentos_com_diferenca else "Nenhum"
+
         html.append(f"""
         <div class="resumo">
             <h2>📊 RESUMO DA COMPARAÇÃO</h2>
-            <h4>📍 VÉRTICE:</h4>
-            <p>✅ Idênticos: <strong>{identicos_vertice}</strong></p>
-            <p>❌ Diferentes: <strong>{diferencas_vertice}</strong></p>
-            <h4>🔄 SEGMENTO VANTE:</h4>
-            <p>✅ Idênticos: <strong>{identicos_segmento}</strong></p>
-            <p>❌ Diferentes: <strong>{diferencas_segmento}</strong></p>
+
+            <h4>📍 VÉRTICES:</h4>
+            <p>✅ Campos idênticos: <strong>{identicos_vertice}</strong></p>
+            <p>❌ Campos diferentes: <strong>{diferencas_vertice}</strong></p>
+            <p>⚠️ Vértices com diferenças: <strong>{vertices_str}</strong></p>
+
+            <h4>🔄 SEGMENTOS VANTE:</h4>
+            <p>✅ Campos idênticos: <strong>{identicos_segmento}</strong></p>
+            <p>❌ Campos diferentes: <strong>{diferencas_segmento}</strong></p>
+            <p>⚠️ Segmentos com diferenças: <strong>{segmentos_str}</strong></p>
+
             <h4>🎯 TOTAL GERAL:</h4>
-            <p>✅ Total idênticos: <strong>{identicos_total}</strong></p>
-            <p>❌ Total diferentes: <strong>{diferencas_total}</strong></p>
+            <p>✅ Total de campos idênticos: <strong>{identicos_total}</strong></p>
+            <p>❌ Total de campos diferentes: <strong>{diferencas_total}</strong></p>
+            <p>📋 Total de vértices analisados: <strong>{max_rows - 1}</strong></p>
         </div>
         <div class="rodape">
             <p>Relatório gerado automaticamente pelo Sistema de Verificação INCRA v4.0</p>
@@ -1719,7 +1793,22 @@ class VerificadorGeorreferenciamento:
 
     def _salvar_e_abrir_relatorio(self, conteudo_html: str):
         """Salva relatório automaticamente e abre no navegador."""
-        relatorios_dir = Path.home() / "Documentos" / "Relatórios INCRA"
+        # Tentar várias localizações comuns
+        possible_docs = [
+            Path.home() / "Documents",  # Inglês/Linux
+            Path.home() / "Documentos",  # Português
+            Path.home()  # Fallback
+        ]
+
+        relatorios_dir = None
+        for path in possible_docs:
+            if path.exists():
+                relatorios_dir = path / "Relatórios INCRA"
+                break
+
+        if relatorios_dir is None:
+            relatorios_dir = Path.home() / "Relatórios INCRA"
+
         relatorios_dir.mkdir(parents=True, exist_ok=True)
 
         numero = self.numero_prenotacao.get()
@@ -1732,6 +1821,7 @@ class VerificadorGeorreferenciamento:
         webbrowser.open(f'file://{caminho_completo}')
 
         self._atualizar_status(f"✅ Relatório salvo: {caminho_completo}")
+        print(f"✅ Relatório HTML salvo em: {caminho_completo}")
 
     def _mostrar_resumo_no_texto(self):
         """Mostra resumo simplificado na área de texto."""
