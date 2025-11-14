@@ -706,6 +706,25 @@ class VerificadorGeorreferenciamento:
             # Esconder campos de páginas
             self.paginas_frame.pack_forget()
 
+    def _atualizar_visual_submodo(self):
+        """Atualiza visual dos cards de sub-modo baseado na seleção."""
+        if self.modo_automatico_tipo.get() == "paginas":
+            # Destacar card Páginas
+            self.card_paginas.config(highlightthickness=3, highlightbackground='#3B82F6')
+            self.badge_paginas.pack(pady=(15, 0))
+
+            # Desmarcar card IA
+            self.card_ia.config(highlightthickness=2, highlightbackground=self.colors['border'])
+            self.badge_ia.pack_forget()
+        else:  # "ia"
+            # Destacar card IA
+            self.card_ia.config(highlightthickness=3, highlightbackground='#7C3AED')
+            self.badge_ia.pack(pady=(15, 0))
+
+            # Desmarcar card Páginas
+            self.card_paginas.config(highlightthickness=2, highlightbackground=self.colors['border'])
+            self.badge_paginas.pack_forget()
+
     def _criar_modo_automatico_content(self):
         """Cria conteúdo do modo automático."""
         self.automatico_content = self._criar_card(self.content_frame)
@@ -722,55 +741,180 @@ class VerificadorGeorreferenciamento:
             bg=self.colors['bg_card']
         ).pack(pady=(0, 25))
 
-        # ===== SELETOR DE SUB-MODO =====
-        submodo_card = tk.Frame(
-            content,
-            bg='#F3F4F6',
-            highlightthickness=2,
-            highlightbackground=self.colors['border']
-        )
-        submodo_card.pack(fill=tk.X, pady=(0, 20))
-
-        submodo_content = tk.Frame(submodo_card, bg='#F3F4F6')
-        submodo_content.pack(fill=tk.X, padx=20, pady=15)
+        # ===== SELETOR DE SUB-MODO (CARDS CLICÁVEIS) =====
+        submodo_container = tk.Frame(content, bg=self.colors['bg_card'])
+        submodo_container.pack(fill=tk.X, pady=(0, 20))
 
         tk.Label(
-            submodo_content,
+            submodo_container,
             text="⚙️  Tipo de Processamento Automático",
             font=('Inter', 11, 'bold'),
             fg=self.colors['text_dark'],
-            bg='#F3F4F6'
-        ).pack(anchor=tk.W, pady=(0, 12))
+            bg=self.colors['bg_card']
+        ).pack(anchor=tk.W, pady=(0, 15))
 
-        # Frame para os radio buttons
-        radio_frame = tk.Frame(submodo_content, bg='#F3F4F6')
-        radio_frame.pack(fill=tk.X)
+        # Container para os cards lado a lado
+        cards_frame = tk.Frame(submodo_container, bg=self.colors['bg_card'])
+        cards_frame.pack(fill=tk.X)
 
-        tk.Radiobutton(
-            radio_frame,
-            text="📄  Por Páginas (Manual) - Você especifica quais páginas extrair",
-            variable=self.modo_automatico_tipo,
-            value="paginas",
-            font=('Inter', 10),
-            bg='#F3F4F6',
-            activebackground='#F3F4F6',
-            selectcolor='#F3F4F6',
-            cursor='hand2',
-            command=self._alternar_modo_automatico
-        ).pack(anchor=tk.W, pady=3)
+        # Card: Por Páginas
+        self.card_paginas = tk.Frame(
+            cards_frame,
+            bg='#DBEAFE',
+            highlightthickness=3,
+            highlightbackground='#3B82F6',
+            cursor='hand2'
+        )
+        self.card_paginas.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=(0, 10))
 
-        tk.Radiobutton(
-            radio_frame,
-            text="🤖  Por IA - A Inteligência Artificial detecta automaticamente",
-            variable=self.modo_automatico_tipo,
-            value="ia",
-            font=('Inter', 10),
-            bg='#F3F4F6',
-            activebackground='#F3F4F6',
-            selectcolor='#F3F4F6',
-            cursor='hand2',
-            command=self._alternar_modo_automatico
-        ).pack(anchor=tk.W, pady=3)
+        paginas_content = tk.Frame(self.card_paginas, bg='#DBEAFE')
+        paginas_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Ícone e título
+        header_paginas = tk.Frame(paginas_content, bg='#DBEAFE')
+        header_paginas.pack(fill=tk.X)
+
+        tk.Label(
+            header_paginas,
+            text="📄",
+            font=('Segoe UI Emoji', 32),
+            bg='#DBEAFE'
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
+        title_frame_paginas = tk.Frame(header_paginas, bg='#DBEAFE')
+        title_frame_paginas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            title_frame_paginas,
+            text="Por Páginas",
+            font=('Inter', 13, 'bold'),
+            fg='#1E40AF',
+            bg='#DBEAFE',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        tk.Label(
+            title_frame_paginas,
+            text="Manual",
+            font=('Inter', 9),
+            fg='#1E40AF',
+            bg='#DBEAFE',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        # Descrição
+        tk.Label(
+            paginas_content,
+            text="Você especifica quais\npáginas extrair",
+            font=('Inter', 9),
+            fg='#1E3A8A',
+            bg='#DBEAFE',
+            justify=tk.LEFT
+        ).pack(anchor=tk.W, pady=(10, 0))
+
+        # Badge de selecionado
+        self.badge_paginas = tk.Label(
+            paginas_content,
+            text="✓ SELECIONADO",
+            font=('Inter', 8, 'bold'),
+            fg='white',
+            bg='#3B82F6',
+            padx=10,
+            pady=4
+        )
+
+        # Card: Por IA
+        self.card_ia = tk.Frame(
+            cards_frame,
+            bg='#F3E8FF',
+            highlightthickness=2,
+            highlightbackground=self.colors['border'],
+            cursor='hand2'
+        )
+        self.card_ia.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+
+        ia_content = tk.Frame(self.card_ia, bg='#F3E8FF')
+        ia_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Ícone e título
+        header_ia = tk.Frame(ia_content, bg='#F3E8FF')
+        header_ia.pack(fill=tk.X)
+
+        tk.Label(
+            header_ia,
+            text="🤖",
+            font=('Segoe UI Emoji', 32),
+            bg='#F3E8FF'
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
+        title_frame_ia = tk.Frame(header_ia, bg='#F3E8FF')
+        title_frame_ia.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            title_frame_ia,
+            text="Por IA",
+            font=('Inter', 13, 'bold'),
+            fg='#7C3AED',
+            bg='#F3E8FF',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        tk.Label(
+            title_frame_ia,
+            text="Automático",
+            font=('Inter', 9),
+            fg='#7C3AED',
+            bg='#F3E8FF',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        # Descrição
+        tk.Label(
+            ia_content,
+            text="IA detecta páginas\nautomaticamente",
+            font=('Inter', 9),
+            fg='#6B21A8',
+            bg='#F3E8FF',
+            justify=tk.LEFT
+        ).pack(anchor=tk.W, pady=(10, 0))
+
+        # Badge de selecionado
+        self.badge_ia = tk.Label(
+            ia_content,
+            text="✓ SELECIONADO",
+            font=('Inter', 8, 'bold'),
+            fg='white',
+            bg='#7C3AED',
+            padx=10,
+            pady=4
+        )
+
+        # Eventos de clique
+        def selecionar_paginas(event=None):
+            self.modo_automatico_tipo.set("paginas")
+            self._alternar_modo_automatico()
+            self._atualizar_visual_submodo()
+
+        def selecionar_ia(event=None):
+            self.modo_automatico_tipo.set("ia")
+            self._alternar_modo_automatico()
+            self._atualizar_visual_submodo()
+
+        # Bind nos cards
+        self.card_paginas.bind('<Button-1>', selecionar_paginas)
+        for widget in paginas_content.winfo_children():
+            widget.bind('<Button-1>', selecionar_paginas)
+            for child in widget.winfo_children():
+                child.bind('<Button-1>', selecionar_paginas)
+
+        self.card_ia.bind('<Button-1>', selecionar_ia)
+        for widget in ia_content.winfo_children():
+            widget.bind('<Button-1>', selecionar_ia)
+            for child in widget.winfo_children():
+                child.bind('<Button-1>', selecionar_ia)
+
+        # Atualizar visual inicial
+        self._atualizar_visual_submodo()
 
         # ===== CAMPOS DE PÁGINAS (visível apenas no modo "paginas") =====
         self.paginas_frame = tk.Frame(content, bg=self.colors['bg_card'])
