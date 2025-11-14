@@ -138,6 +138,8 @@ class VerificadorGeorreferenciamento:
         self.modo_automatico_tipo = tk.StringVar(value="paginas")  # "ia" ou "paginas"
         self.paginas_incra_auto = tk.StringVar()  # Para modo automático
         self.paginas_projeto_auto = tk.StringVar()  # Para modo automático
+        self.arquivo_manual_incra_auto = tk.StringVar()  # Arquivo INCRA selecionado manualmente (modo auto)
+        self.arquivo_manual_projeto_auto = tk.StringVar()  # Arquivo Projeto selecionado manualmente (modo auto)
 
         # Variáveis para sub-modo manual
         self.modo_manual_tipo = tk.StringVar(value="completo")  # "completo" ou "por_paginas"
@@ -1068,6 +1070,116 @@ class VerificadorGeorreferenciamento:
             bg='#FEF3C7'
         ).pack(anchor=tk.W, pady=(3, 0))
 
+        # ===== OPÇÃO DE SELEÇÃO MANUAL DE ARQUIVOS =====
+        selecao_manual_card = tk.Frame(
+            self.paginas_frame_auto,
+            bg='#E0F2FE',
+            highlightthickness=2,
+            highlightbackground='#38BDF8'
+        )
+        selecao_manual_card.pack(fill=tk.X, pady=(15, 0))
+
+        selecao_manual_content = tk.Frame(selecao_manual_card, bg='#E0F2FE')
+        selecao_manual_content.pack(fill=tk.X, padx=20, pady=15)
+
+        tk.Label(
+            selecao_manual_content,
+            text="💡  Ou Selecione Arquivos Manualmente (Opcional)",
+            font=('Inter', 10, 'bold'),
+            fg='#0369A1',
+            bg='#E0F2FE'
+        ).pack(anchor=tk.W, pady=(0, 10))
+
+        tk.Label(
+            selecao_manual_content,
+            text="Use esta opção se preferir selecionar o arquivo diretamente em vez de buscar pela prenotação",
+            font=('Inter', 8),
+            fg='#075985',
+            bg='#E0F2FE'
+        ).pack(anchor=tk.W, pady=(0, 10))
+
+        # Seleção arquivo INCRA
+        incra_manual_frame = tk.Frame(selecao_manual_content, bg='#E0F2FE')
+        incra_manual_frame.pack(fill=tk.X, pady=(0, 8))
+
+        tk.Label(
+            incra_manual_frame,
+            text="📄  Arquivo INCRA:",
+            font=('Inter', 9, 'bold'),
+            fg='#0369A1',
+            bg='#E0F2FE'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        incra_select_frame = tk.Frame(incra_manual_frame, bg='#E0F2FE')
+        incra_select_frame.pack(fill=tk.X)
+
+        self.incra_manual_auto_entry = tk.Entry(
+            incra_select_frame,
+            textvariable=self.arquivo_manual_incra_auto,
+            font=('Inter', 9),
+            state='readonly',
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=1,
+            highlightthickness=0
+        )
+        self.incra_manual_auto_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6, ipadx=8)
+
+        tk.Button(
+            incra_select_frame,
+            text="📁 Selecionar",
+            command=lambda: self._selecionar_arquivo_hibrido("incra"),
+            font=('Inter', 9, 'bold'),
+            bg='#0284C7',
+            fg='white',
+            relief=tk.FLAT,
+            padx=12,
+            pady=6,
+            cursor='hand2'
+        ).pack(side=tk.LEFT, padx=(8, 0))
+
+        # Seleção arquivo Projeto
+        projeto_manual_frame = tk.Frame(selecao_manual_content, bg='#E0F2FE')
+        projeto_manual_frame.pack(fill=tk.X)
+
+        tk.Label(
+            projeto_manual_frame,
+            text="📐  Arquivo Projeto/Planta:",
+            font=('Inter', 9, 'bold'),
+            fg='#0369A1',
+            bg='#E0F2FE'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        projeto_select_frame = tk.Frame(projeto_manual_frame, bg='#E0F2FE')
+        projeto_select_frame.pack(fill=tk.X)
+
+        self.projeto_manual_auto_entry = tk.Entry(
+            projeto_select_frame,
+            textvariable=self.arquivo_manual_projeto_auto,
+            font=('Inter', 9),
+            state='readonly',
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=1,
+            highlightthickness=0
+        )
+        self.projeto_manual_auto_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=6, ipadx=8)
+
+        tk.Button(
+            projeto_select_frame,
+            text="📁 Selecionar",
+            command=lambda: self._selecionar_arquivo_hibrido("projeto"),
+            font=('Inter', 9, 'bold'),
+            bg='#0284C7',
+            fg='white',
+            relief=tk.FLAT,
+            padx=12,
+            pady=6,
+            cursor='hand2'
+        ).pack(side=tk.LEFT, padx=(8, 0))
+
         # Botão grande de iniciar
         self.btn_iniciar_automatico = tk.Button(
             content,
@@ -1881,6 +1993,29 @@ class VerificadorGeorreferenciamento:
         if filename:
             variavel.set(filename)
 
+    def _selecionar_arquivo_hibrido(self, tipo):
+        """Abre diálogo para selecionar arquivo PDF manualmente no modo automático (híbrido)."""
+        nome_tipo = "Memorial INCRA" if tipo == "incra" else "Planta/Projeto"
+        filename = filedialog.askopenfilename(
+            title=f"Selecionar arquivo {nome_tipo} manualmente",
+            filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")]
+        )
+        if filename:
+            if tipo == "incra":
+                self.arquivo_manual_incra_auto.set(filename)
+                messagebox.showinfo(
+                    "Arquivo Selecionado",
+                    f"✅ Arquivo INCRA selecionado:\n\n{Path(filename).name}\n\n"
+                    "O sistema usará este arquivo em vez de buscar pela prenotação."
+                )
+            else:  # projeto
+                self.arquivo_manual_projeto_auto.set(filename)
+                messagebox.showinfo(
+                    "Arquivo Selecionado",
+                    f"✅ Arquivo Projeto selecionado:\n\n{Path(filename).name}\n\n"
+                    "O sistema usará este arquivo em vez de buscar pela prenotação."
+                )
+
     def _selecionar_multiplos_arquivos(self, variavel, tipo):
         """Abre diálogo para selecionar múltiplos arquivos PDF e faz o merge."""
         filenames = filedialog.askopenfilenames(
@@ -2139,29 +2274,61 @@ class VerificadorGeorreferenciamento:
 
                 modo = self.modo_automatico_tipo.get()
 
-                # Etapa 1: Buscar arquivo TIFF (0-15%)
-                self._atualizar_progresso(
-                    5,
-                    "Buscando arquivo TIFF na rede...",
-                    f"Procurando documento na rede do cartório (Prenotação: {self.numero_prenotacao.get()})"
-                )
-                self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
-                tiff_path = self._buscar_arquivo_tiff()
+                # Verificar se há arquivos selecionados manualmente
+                tem_incra_manual = bool(self.arquivo_manual_incra_auto.get())
+                tem_projeto_manual = bool(self.arquivo_manual_projeto_auto.get())
 
-                if not tiff_path:
-                    raise Exception("Arquivo TIFF não encontrado na rede.")
+                # Determinar arquivo fonte para INCRA
+                if tem_incra_manual:
+                    # INCRA: Arquivo selecionado manualmente
+                    self._atualizar_progresso(
+                        5,
+                        "Usando arquivo INCRA selecionado manualmente...",
+                        f"Arquivo: {Path(self.arquivo_manual_incra_auto.get()).name}"
+                    )
+                    self._atualizar_status("📄 Usando arquivo INCRA manual...")
+                    pdf_incra_path = self.arquivo_manual_incra_auto.get()
+                    self._atualizar_progresso(15, "Arquivo INCRA pronto!", "")
+                else:
+                    # INCRA: Buscar automaticamente pela prenotação
+                    self._atualizar_progresso(
+                        5,
+                        "Buscando arquivo TIFF na rede...",
+                        f"Procurando documento na rede (Prenotação: {self.numero_prenotacao.get()})"
+                    )
+                    self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
+                    tiff_path = self._buscar_arquivo_tiff()
 
-                self._atualizar_progresso(15, "Arquivo encontrado!", f"Localizado: {tiff_path}")
+                    if not tiff_path:
+                        raise Exception("Arquivo TIFF não encontrado na rede.")
 
-                # Etapa 2: Converter para PDF (15-25%)
-                self._atualizar_progresso(
-                    18,
-                    "Convertendo TIFF para PDF...",
-                    "Copiando arquivo e convertendo formato"
-                )
-                self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
-                pdf_path = self._converter_tiff_para_pdf(tiff_path)
-                self._atualizar_progresso(25, "PDF criado com sucesso!", "")
+                    self._atualizar_progresso(10, "Arquivo encontrado!", f"Localizado: {tiff_path}")
+
+                    # Converter TIFF para PDF
+                    self._atualizar_progresso(
+                        12,
+                        "Convertendo TIFF para PDF...",
+                        "Copiando arquivo e convertendo formato"
+                    )
+                    self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
+                    pdf_incra_path = self._converter_tiff_para_pdf(tiff_path)
+                    self._atualizar_progresso(15, "PDF criado com sucesso!", "")
+
+                # Determinar arquivo fonte para Projeto
+                if tem_projeto_manual:
+                    # Projeto: Arquivo selecionado manualmente
+                    self._atualizar_progresso(
+                        18,
+                        "Usando arquivo Projeto selecionado manualmente...",
+                        f"Arquivo: {Path(self.arquivo_manual_projeto_auto.get()).name}"
+                    )
+                    self._atualizar_status("📐 Usando arquivo Projeto manual...")
+                    pdf_projeto_path = self.arquivo_manual_projeto_auto.get()
+                    self._atualizar_progresso(25, "Arquivo Projeto pronto!", "")
+                else:
+                    # Projeto: Usar mesmo PDF do INCRA
+                    pdf_projeto_path = pdf_incra_path
+                    self._atualizar_progresso(25, "Usando mesmo PDF para Projeto", "")
 
                 # Etapa 3: Extrair Memorial INCRA (25-50%)
                 if modo == "ia":
@@ -2172,7 +2339,7 @@ class VerificadorGeorreferenciamento:
                         "Usando IA para identificar e extrair páginas do Memorial INCRA"
                     )
                     self._atualizar_status("📄 Extraindo Memorial INCRA com IA...")
-                    self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+                    self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_incra_path)
                 else:
                     # Modo Páginas: Extrair páginas especificadas pelo usuário
                     self._atualizar_progresso(
@@ -2182,7 +2349,7 @@ class VerificadorGeorreferenciamento:
                     )
                     self._atualizar_status("📄 Extraindo Memorial INCRA (páginas especificadas)...")
                     self.pdf_extraido_incra = self._extrair_paginas_manual(
-                        pdf_path,
+                        pdf_incra_path,
                         self.paginas_incra_auto.get(),
                         "memorial_incra_extraido.pdf"
                     )
@@ -2201,7 +2368,7 @@ class VerificadorGeorreferenciamento:
                         "Usando IA para identificar e extrair páginas da Planta/Projeto"
                     )
                     self._atualizar_status("📐 Extraindo Planta/Projeto com IA...")
-                    self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+                    self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_projeto_path)
                 else:
                     # Modo Páginas: Extrair páginas especificadas pelo usuário
                     self._atualizar_progresso(
@@ -2211,7 +2378,7 @@ class VerificadorGeorreferenciamento:
                     )
                     self._atualizar_status("📐 Extraindo Planta/Projeto (páginas especificadas)...")
                     self.pdf_extraido_projeto = self._extrair_paginas_manual(
-                        pdf_path,
+                        pdf_projeto_path,
                         self.paginas_projeto_auto.get(),
                         "projeto_extraido.pdf"
                     )
@@ -2270,17 +2437,20 @@ class VerificadorGeorreferenciamento:
         threading.Thread(target=executar, daemon=True).start()
 
     def _validar_entrada_automatico(self) -> bool:
-        """Valida entradas do modo automático."""
+        """Valida entradas do modo automático (suporta modo híbrido)."""
         modo = self.modo_automatico_tipo.get()
 
-        # Modo Automático sempre precisa de prenotação
-        if not self.numero_prenotacao.get():
-            messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
-            return False
+        # Verificar se há arquivos selecionados manualmente
+        tem_arquivo_incra_manual = bool(self.arquivo_manual_incra_auto.get())
+        tem_arquivo_projeto_manual = bool(self.arquivo_manual_projeto_auto.get())
 
         # Validações específicas por sub-modo
         if modo == "ia":
-            # Modo IA: precisa de API Key
+            # Modo IA: precisa de prenotação e API Key
+            if not self.numero_prenotacao.get():
+                messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
+                return False
+
             api_key = self.config_manager.get_api_key()
             if not api_key:
                 messagebox.showerror("Erro", "Por favor, configure a API Key primeiro.")
@@ -2295,6 +2465,47 @@ class VerificadorGeorreferenciamento:
             if not self.paginas_projeto_auto.get().strip():
                 messagebox.showerror("Erro", "Por favor, especifique as páginas da Planta/Projeto.")
                 return False
+
+            # Modo Híbrido: validar fonte dos arquivos
+            # Precisa ter OU prenotação (para buscar automaticamente) OU arquivos manuais
+            if not tem_arquivo_incra_manual and not tem_arquivo_projeto_manual:
+                # Se não tem arquivos manuais, precisa de prenotação
+                if not self.numero_prenotacao.get():
+                    messagebox.showerror(
+                        "Erro",
+                        "Por favor:\n\n"
+                        "• Insira o Número de Prenotação (para busca automática)\n"
+                        "OU\n"
+                        "• Selecione os arquivos manualmente"
+                    )
+                    return False
+            else:
+                # Modo híbrido: validar que se selecionou um arquivo manual, precisa de prenotação para o outro
+                if tem_arquivo_incra_manual and not tem_arquivo_projeto_manual:
+                    # Tem INCRA manual, precisa de prenotação para buscar Projeto
+                    if not self.numero_prenotacao.get():
+                        messagebox.showerror(
+                            "Erro",
+                            "Você selecionou o arquivo INCRA manualmente.\n\n"
+                            "Por favor:\n"
+                            "• Insira o Número de Prenotação (para buscar o Projeto)\n"
+                            "OU\n"
+                            "• Selecione o arquivo do Projeto manualmente"
+                        )
+                        return False
+
+                if tem_arquivo_projeto_manual and not tem_arquivo_incra_manual:
+                    # Tem Projeto manual, precisa de prenotação para buscar INCRA
+                    if not self.numero_prenotacao.get():
+                        messagebox.showerror(
+                            "Erro",
+                            "Você selecionou o arquivo do Projeto manualmente.\n\n"
+                            "Por favor:\n"
+                            "• Insira o Número de Prenotação (para buscar o INCRA)\n"
+                            "OU\n"
+                            "• Selecione o arquivo do INCRA manualmente"
+                        )
+                        return False
 
         return True
 
@@ -2816,6 +3027,8 @@ class VerificadorGeorreferenciamento:
             self.numero_prenotacao.set("")
             self.paginas_incra_auto.set("")
             self.paginas_projeto_auto.set("")
+            self.arquivo_manual_incra_auto.set("")
+            self.arquivo_manual_projeto_auto.set("")
 
             # Limpar campos de entrada - Modo Manual
             self.incra_path.set("")
