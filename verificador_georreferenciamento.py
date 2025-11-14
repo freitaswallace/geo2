@@ -135,10 +135,14 @@ class VerificadorGeorreferenciamento:
         self.modo_atual = tk.StringVar(value="automatico")
 
         # Variáveis para sub-modo automático
-        self.modo_automatico_tipo = tk.StringVar(value="paginas_auto")  # "ia", "paginas_auto" ou "paginas_manual"
-        self.paginas_incra = tk.StringVar()
-        self.paginas_projeto = tk.StringVar()
-        self.arquivo_manual_path = tk.StringVar()  # Para o modo paginas_manual
+        self.modo_automatico_tipo = tk.StringVar(value="paginas")  # "ia" ou "paginas"
+        self.paginas_incra_auto = tk.StringVar()  # Para modo automático
+        self.paginas_projeto_auto = tk.StringVar()  # Para modo automático
+
+        # Variáveis para sub-modo manual
+        self.modo_manual_tipo = tk.StringVar(value="completo")  # "completo" ou "por_paginas"
+        self.paginas_incra_manual = tk.StringVar()  # Para modo manual por páginas
+        self.paginas_projeto_manual = tk.StringVar()  # Para modo manual por páginas
 
         # Variáveis para armazenar dados extraídos
         self.incra_excel_path: Optional[str] = None
@@ -699,25 +703,29 @@ class VerificadorGeorreferenciamento:
             self.manual_content.pack(fill=tk.BOTH, expand=True)
 
     def _alternar_modo_automatico(self):
-        """Alterna entre sub-modos do modo automático (IA vs Páginas Auto vs Páginas Manual)."""
+        """Alterna entre sub-modos do modo automático (IA vs Páginas)."""
         modo = self.modo_automatico_tipo.get()
 
-        if modo == "paginas_auto" or modo == "paginas_manual":
+        if modo == "paginas":
             # Mostrar campos de páginas
-            self.paginas_frame.pack(fill=tk.X, pady=(0, 20))
+            self.paginas_frame_auto.pack(fill=tk.X, pady=(0, 20))
         else:  # ia
             # Esconder campos de páginas
-            self.paginas_frame.pack_forget()
+            self.paginas_frame_auto.pack_forget()
 
-        if modo == "paginas_manual":
-            # Mostrar campo de seleção de arquivo
-            self.arquivo_manual_frame.pack(fill=tk.X, pady=(0, 20))
-        else:
-            # Esconder campo de seleção de arquivo
-            self.arquivo_manual_frame.pack_forget()
+    def _alternar_modo_manual(self):
+        """Alterna entre sub-modos do modo manual (Completo vs Por Páginas)."""
+        modo = self.modo_manual_tipo.get()
 
-    def _atualizar_visual_submodo(self):
-        """Atualiza visual dos cards de sub-modo baseado na seleção."""
+        if modo == "por_paginas":
+            # Mostrar campos de páginas
+            self.paginas_frame_manual.pack(fill=tk.X, pady=(0, 20))
+        else:  # completo
+            # Esconder campos de páginas
+            self.paginas_frame_manual.pack_forget()
+
+    def _atualizar_visual_submodo_auto(self):
+        """Atualiza visual dos cards de sub-modo automático baseado na seleção."""
         modo = self.modo_automatico_tipo.get()
 
         # Resetar todos os cards para estado não selecionado
@@ -727,19 +735,32 @@ class VerificadorGeorreferenciamento:
         self.card_paginas_auto.config(highlightthickness=2, highlightbackground=self.colors['border'])
         self.badge_paginas_auto.pack_forget()
 
-        self.card_paginas_manual.config(highlightthickness=2, highlightbackground=self.colors['border'])
-        self.badge_paginas_manual.pack_forget()
-
         # Destacar o card selecionado
         if modo == "ia":
             self.card_ia.config(highlightthickness=3, highlightbackground='#7C3AED')
             self.badge_ia.pack(pady=(15, 0))
-        elif modo == "paginas_auto":
+        elif modo == "paginas":
             self.card_paginas_auto.config(highlightthickness=3, highlightbackground='#3B82F6')
             self.badge_paginas_auto.pack(pady=(15, 0))
-        elif modo == "paginas_manual":
-            self.card_paginas_manual.config(highlightthickness=3, highlightbackground='#059669')
-            self.badge_paginas_manual.pack(pady=(15, 0))
+
+    def _atualizar_visual_submodo_manual(self):
+        """Atualiza visual dos cards de sub-modo manual baseado na seleção."""
+        modo = self.modo_manual_tipo.get()
+
+        # Resetar todos os cards para estado não selecionado
+        self.card_completo.config(highlightthickness=2, highlightbackground=self.colors['border'])
+        self.badge_completo.pack_forget()
+
+        self.card_por_paginas_manual.config(highlightthickness=2, highlightbackground=self.colors['border'])
+        self.badge_por_paginas_manual.pack_forget()
+
+        # Destacar o card selecionado
+        if modo == "completo":
+            self.card_completo.config(highlightthickness=3, highlightbackground='#10B981')
+            self.badge_completo.pack(pady=(15, 0))
+        elif modo == "por_paginas":
+            self.card_por_paginas_manual.config(highlightthickness=3, highlightbackground='#3B82F6')
+            self.badge_por_paginas_manual.pack(pady=(15, 0))
 
     def _criar_modo_automatico_content(self):
         """Cria conteúdo do modo automático."""
@@ -839,7 +860,7 @@ class VerificadorGeorreferenciamento:
             pady=3
         )
 
-        # ===== CARD 2: Por Páginas Automático =====
+        # ===== CARD 2: Por Páginas =====
         self.card_paginas_auto = tk.Frame(
             cards_frame,
             bg='#DBEAFE',
@@ -847,10 +868,10 @@ class VerificadorGeorreferenciamento:
             highlightbackground='#3B82F6',
             cursor='hand2'
         )
-        self.card_paginas_auto.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=(0, 10))
+        self.card_paginas_auto.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
         paginas_auto_content = tk.Frame(self.card_paginas_auto, bg='#DBEAFE')
-        paginas_auto_content.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+        paginas_auto_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
         # Ícone e título
         header_paginas_auto = tk.Frame(paginas_auto_content, bg='#DBEAFE')
@@ -859,17 +880,17 @@ class VerificadorGeorreferenciamento:
         tk.Label(
             header_paginas_auto,
             text="📄",
-            font=('Segoe UI Emoji', 28),
+            font=('Segoe UI Emoji', 32),
             bg='#DBEAFE'
-        ).pack(side=tk.LEFT, padx=(0, 8))
+        ).pack(side=tk.LEFT, padx=(0, 10))
 
         title_frame_paginas_auto = tk.Frame(header_paginas_auto, bg='#DBEAFE')
         title_frame_paginas_auto.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         tk.Label(
             title_frame_paginas_auto,
-            text="Pág. Auto",
-            font=('Inter', 12, 'bold'),
+            text="Por Páginas",
+            font=('Inter', 13, 'bold'),
             fg='#1E40AF',
             bg='#DBEAFE',
             anchor=tk.W
@@ -877,8 +898,8 @@ class VerificadorGeorreferenciamento:
 
         tk.Label(
             title_frame_paginas_auto,
-            text="Busca + Páginas",
-            font=('Inter', 8),
+            text="Manual",
+            font=('Inter', 9),
             fg='#1E40AF',
             bg='#DBEAFE',
             anchor=tk.W
@@ -887,105 +908,34 @@ class VerificadorGeorreferenciamento:
         # Descrição
         tk.Label(
             paginas_auto_content,
-            text="Busca arquivo\n+ você digita",
-            font=('Inter', 8),
+            text="Você especifica quais\npáginas extrair",
+            font=('Inter', 9),
             fg='#1E3A8A',
             bg='#DBEAFE',
             justify=tk.LEFT
-        ).pack(anchor=tk.W, pady=(8, 0))
+        ).pack(anchor=tk.W, pady=(10, 0))
 
         # Badge de selecionado
         self.badge_paginas_auto = tk.Label(
             paginas_auto_content,
             text="✓ SELECIONADO",
-            font=('Inter', 7, 'bold'),
+            font=('Inter', 8, 'bold'),
             fg='white',
             bg='#3B82F6',
-            padx=8,
-            pady=3
-        )
-
-        # ===== CARD 3: Por Páginas Manual =====
-        self.card_paginas_manual = tk.Frame(
-            cards_frame,
-            bg='#D1FAE5',
-            highlightthickness=2,
-            highlightbackground=self.colors['border'],
-            cursor='hand2'
-        )
-        self.card_paginas_manual.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
-
-        paginas_manual_content = tk.Frame(self.card_paginas_manual, bg='#D1FAE5')
-        paginas_manual_content.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
-
-        # Ícone e título
-        header_paginas_manual = tk.Frame(paginas_manual_content, bg='#D1FAE5')
-        header_paginas_manual.pack(fill=tk.X)
-
-        tk.Label(
-            header_paginas_manual,
-            text="📁",
-            font=('Segoe UI Emoji', 28),
-            bg='#D1FAE5'
-        ).pack(side=tk.LEFT, padx=(0, 8))
-
-        title_frame_paginas_manual = tk.Frame(header_paginas_manual, bg='#D1FAE5')
-        title_frame_paginas_manual.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        tk.Label(
-            title_frame_paginas_manual,
-            text="Pág. Manual",
-            font=('Inter', 12, 'bold'),
-            fg='#059669',
-            bg='#D1FAE5',
-            anchor=tk.W
-        ).pack(anchor=tk.W)
-
-        tk.Label(
-            title_frame_paginas_manual,
-            text="Arquivo + Páginas",
-            font=('Inter', 8),
-            fg='#059669',
-            bg='#D1FAE5',
-            anchor=tk.W
-        ).pack(anchor=tk.W)
-
-        # Descrição
-        tk.Label(
-            paginas_manual_content,
-            text="Você seleciona\ntudo",
-            font=('Inter', 8),
-            fg='#047857',
-            bg='#D1FAE5',
-            justify=tk.LEFT
-        ).pack(anchor=tk.W, pady=(8, 0))
-
-        # Badge de selecionado
-        self.badge_paginas_manual = tk.Label(
-            paginas_manual_content,
-            text="✓ SELECIONADO",
-            font=('Inter', 7, 'bold'),
-            fg='white',
-            bg='#059669',
-            padx=8,
-            pady=3
+            padx=10,
+            pady=4
         )
 
         # ===== EVENTOS DE CLIQUE =====
         def selecionar_ia(event=None):
             self.modo_automatico_tipo.set("ia")
             self._alternar_modo_automatico()
-            self._atualizar_visual_submodo()
+            self._atualizar_visual_submodo_auto()
 
-        def selecionar_paginas_auto(event=None):
-            self.modo_automatico_tipo.set("paginas_auto")
+        def selecionar_paginas(event=None):
+            self.modo_automatico_tipo.set("paginas")
             self._alternar_modo_automatico()
-            self._atualizar_visual_submodo()
-
-        def selecionar_paginas_manual(event=None):
-            self.modo_automatico_tipo.set("paginas_manual")
-            self._alternar_modo_automatico()
-            self._atualizar_visual_submodo()
+            self._atualizar_visual_submodo_auto()
 
         # Bind card IA
         self.card_ia.bind('<Button-1>', selecionar_ia)
@@ -994,29 +944,22 @@ class VerificadorGeorreferenciamento:
             for child in widget.winfo_children():
                 child.bind('<Button-1>', selecionar_ia)
 
-        # Bind card Páginas Auto
-        self.card_paginas_auto.bind('<Button-1>', selecionar_paginas_auto)
+        # Bind card Páginas
+        self.card_paginas_auto.bind('<Button-1>', selecionar_paginas)
         for widget in paginas_auto_content.winfo_children():
-            widget.bind('<Button-1>', selecionar_paginas_auto)
+            widget.bind('<Button-1>', selecionar_paginas)
             for child in widget.winfo_children():
-                child.bind('<Button-1>', selecionar_paginas_auto)
-
-        # Bind card Páginas Manual
-        self.card_paginas_manual.bind('<Button-1>', selecionar_paginas_manual)
-        for widget in paginas_manual_content.winfo_children():
-            widget.bind('<Button-1>', selecionar_paginas_manual)
-            for child in widget.winfo_children():
-                child.bind('<Button-1>', selecionar_paginas_manual)
+                child.bind('<Button-1>', selecionar_paginas)
 
         # Atualizar visual inicial
-        self._atualizar_visual_submodo()
+        self._atualizar_visual_submodo_auto()
 
         # ===== CAMPOS DE PÁGINAS (visível apenas no modo "paginas") =====
-        self.paginas_frame = tk.Frame(content, bg=self.colors['bg_card'])
-        self.paginas_frame.pack(fill=tk.X, pady=(0, 20))
+        self.paginas_frame_auto = tk.Frame(content, bg=self.colors['bg_card'])
+        self.paginas_frame_auto.pack(fill=tk.X, pady=(0, 20))
 
         paginas_card = tk.Frame(
-            self.paginas_frame,
+            self.paginas_frame_auto,
             bg='#FEF3C7',
             highlightthickness=2,
             highlightbackground='#FCD34D'
@@ -1048,7 +991,7 @@ class VerificadorGeorreferenciamento:
 
         tk.Entry(
             incra_pag_frame,
-            textvariable=self.paginas_incra,
+            textvariable=self.paginas_incra_auto,
             font=('Inter', 10),
             relief=tk.SOLID,
             bg='white',
@@ -1079,7 +1022,7 @@ class VerificadorGeorreferenciamento:
 
         tk.Entry(
             projeto_pag_frame,
-            textvariable=self.paginas_projeto,
+            textvariable=self.paginas_projeto_auto,
             font=('Inter', 10),
             relief=tk.SOLID,
             bg='white',
@@ -1095,67 +1038,6 @@ class VerificadorGeorreferenciamento:
             fg='#92400E',
             bg='#FEF3C7'
         ).pack(anchor=tk.W, pady=(3, 0))
-
-        # ===== CAMPO DE SELEÇÃO DE ARQUIVO (visível apenas no modo "paginas_manual") =====
-        self.arquivo_manual_frame = tk.Frame(content, bg=self.colors['bg_card'])
-
-        arquivo_manual_card = tk.Frame(
-            self.arquivo_manual_frame,
-            bg='#D1FAE5',
-            highlightthickness=2,
-            highlightbackground='#10B981'
-        )
-        arquivo_manual_card.pack(fill=tk.X)
-
-        arquivo_manual_card_content = tk.Frame(arquivo_manual_card, bg='#D1FAE5')
-        arquivo_manual_card_content.pack(fill=tk.X, padx=20, pady=15)
-
-        tk.Label(
-            arquivo_manual_card_content,
-            text="📁  Selecione o Arquivo PDF",
-            font=('Inter', 11, 'bold'),
-            fg='#065F46',
-            bg='#D1FAE5'
-        ).pack(anchor=tk.W, pady=(0, 12))
-
-        # Frame para o input e botão
-        arquivo_input_frame = tk.Frame(arquivo_manual_card_content, bg='#D1FAE5')
-        arquivo_input_frame.pack(fill=tk.X)
-
-        # Input do caminho do arquivo
-        tk.Entry(
-            arquivo_input_frame,
-            textvariable=self.arquivo_manual_path,
-            font=('Inter', 10),
-            relief=tk.SOLID,
-            bg='white',
-            fg=self.colors['text_dark'],
-            borderwidth=2,
-            highlightthickness=0,
-            state='readonly'
-        ).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=8, ipadx=10, padx=(0, 10))
-
-        # Botão de seleção
-        tk.Button(
-            arquivo_input_frame,
-            text="📂 Escolher Arquivo",
-            command=self._selecionar_arquivo_manual,
-            font=('Inter', 10, 'bold'),
-            bg='#059669',
-            fg='white',
-            relief=tk.FLAT,
-            padx=15,
-            pady=8,
-            cursor='hand2'
-        ).pack(side=tk.RIGHT)
-
-        tk.Label(
-            arquivo_manual_card_content,
-            text="Selecione o arquivo PDF completo que contém o Memorial e a Planta",
-            font=('Inter', 8),
-            fg='#065F46',
-            bg='#D1FAE5'
-        ).pack(anchor=tk.W, pady=(5, 0))
 
         # Botão grande de iniciar
         self.btn_iniciar_automatico = tk.Button(
@@ -1279,6 +1161,266 @@ class VerificadorGeorreferenciamento:
             fg=self.colors['text_medium'],
             bg=self.colors['bg_card']
         ).pack(pady=(0, 25))
+
+        # ===== SELETOR DE SUB-MODO MANUAL (CARDS CLICÁVEIS) =====
+        submodo_manual_container = tk.Frame(content, bg=self.colors['bg_card'])
+        submodo_manual_container.pack(fill=tk.X, pady=(0, 20))
+
+        tk.Label(
+            submodo_manual_container,
+            text="⚙️  Tipo de Processamento Manual",
+            font=('Inter', 11, 'bold'),
+            fg=self.colors['text_dark'],
+            bg=self.colors['bg_card']
+        ).pack(anchor=tk.W, pady=(0, 15))
+
+        # Container para os cards lado a lado
+        cards_manual_frame = tk.Frame(submodo_manual_container, bg=self.colors['bg_card'])
+        cards_manual_frame.pack(fill=tk.X)
+
+        # ===== CARD 1: Completo =====
+        self.card_completo = tk.Frame(
+            cards_manual_frame,
+            bg='#D1FAE5',
+            highlightthickness=3,
+            highlightbackground='#10B981',
+            cursor='hand2'
+        )
+        self.card_completo.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=(0, 10))
+
+        completo_content = tk.Frame(self.card_completo, bg='#D1FAE5')
+        completo_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Ícone e título
+        header_completo = tk.Frame(completo_content, bg='#D1FAE5')
+        header_completo.pack(fill=tk.X)
+
+        tk.Label(
+            header_completo,
+            text="📄",
+            font=('Segoe UI Emoji', 32),
+            bg='#D1FAE5'
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
+        title_frame_completo = tk.Frame(header_completo, bg='#D1FAE5')
+        title_frame_completo.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            title_frame_completo,
+            text="Completo",
+            font=('Inter', 13, 'bold'),
+            fg='#059669',
+            bg='#D1FAE5',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        tk.Label(
+            title_frame_completo,
+            text="Padrão",
+            font=('Inter', 9),
+            fg='#059669',
+            bg='#D1FAE5',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        # Descrição
+        tk.Label(
+            completo_content,
+            text="Processa arquivo\ninteiro",
+            font=('Inter', 9),
+            fg='#047857',
+            bg='#D1FAE5',
+            justify=tk.LEFT
+        ).pack(anchor=tk.W, pady=(10, 0))
+
+        # Badge de selecionado
+        self.badge_completo = tk.Label(
+            completo_content,
+            text="✓ SELECIONADO",
+            font=('Inter', 8, 'bold'),
+            fg='white',
+            bg='#10B981',
+            padx=10,
+            pady=4
+        )
+
+        # ===== CARD 2: Por Páginas =====
+        self.card_por_paginas_manual = tk.Frame(
+            cards_manual_frame,
+            bg='#DBEAFE',
+            highlightthickness=2,
+            highlightbackground=self.colors['border'],
+            cursor='hand2'
+        )
+        self.card_por_paginas_manual.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+
+        por_paginas_manual_content = tk.Frame(self.card_por_paginas_manual, bg='#DBEAFE')
+        por_paginas_manual_content.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+
+        # Ícone e título
+        header_por_paginas_manual = tk.Frame(por_paginas_manual_content, bg='#DBEAFE')
+        header_por_paginas_manual.pack(fill=tk.X)
+
+        tk.Label(
+            header_por_paginas_manual,
+            text="📋",
+            font=('Segoe UI Emoji', 32),
+            bg='#DBEAFE'
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
+        title_frame_por_paginas_manual = tk.Frame(header_por_paginas_manual, bg='#DBEAFE')
+        title_frame_por_paginas_manual.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            title_frame_por_paginas_manual,
+            text="Por Páginas",
+            font=('Inter', 13, 'bold'),
+            fg='#1E40AF',
+            bg='#DBEAFE',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        tk.Label(
+            title_frame_por_paginas_manual,
+            text="Seletivo",
+            font=('Inter', 9),
+            fg='#1E40AF',
+            bg='#DBEAFE',
+            anchor=tk.W
+        ).pack(anchor=tk.W)
+
+        # Descrição
+        tk.Label(
+            por_paginas_manual_content,
+            text="Você especifica\npáginas",
+            font=('Inter', 9),
+            fg='#1E3A8A',
+            bg='#DBEAFE',
+            justify=tk.LEFT
+        ).pack(anchor=tk.W, pady=(10, 0))
+
+        # Badge de selecionado
+        self.badge_por_paginas_manual = tk.Label(
+            por_paginas_manual_content,
+            text="✓ SELECIONADO",
+            font=('Inter', 8, 'bold'),
+            fg='white',
+            bg='#3B82F6',
+            padx=10,
+            pady=4
+        )
+
+        # ===== EVENTOS DE CLIQUE =====
+        def selecionar_completo(event=None):
+            self.modo_manual_tipo.set("completo")
+            self._alternar_modo_manual()
+            self._atualizar_visual_submodo_manual()
+
+        def selecionar_por_paginas_manual(event=None):
+            self.modo_manual_tipo.set("por_paginas")
+            self._alternar_modo_manual()
+            self._atualizar_visual_submodo_manual()
+
+        # Bind card Completo
+        self.card_completo.bind('<Button-1>', selecionar_completo)
+        for widget in completo_content.winfo_children():
+            widget.bind('<Button-1>', selecionar_completo)
+            for child in widget.winfo_children():
+                child.bind('<Button-1>', selecionar_completo)
+
+        # Bind card Por Páginas Manual
+        self.card_por_paginas_manual.bind('<Button-1>', selecionar_por_paginas_manual)
+        for widget in por_paginas_manual_content.winfo_children():
+            widget.bind('<Button-1>', selecionar_por_paginas_manual)
+            for child in widget.winfo_children():
+                child.bind('<Button-1>', selecionar_por_paginas_manual)
+
+        # Atualizar visual inicial
+        self._atualizar_visual_submodo_manual()
+
+        # ===== CAMPOS DE PÁGINAS MANUAL (visível apenas no modo "por_paginas") =====
+        self.paginas_frame_manual = tk.Frame(content, bg=self.colors['bg_card'])
+
+        paginas_manual_card = tk.Frame(
+            self.paginas_frame_manual,
+            bg='#FEF3C7',
+            highlightthickness=2,
+            highlightbackground='#FCD34D'
+        )
+        paginas_manual_card.pack(fill=tk.X)
+
+        paginas_manual_card_content = tk.Frame(paginas_manual_card, bg='#FEF3C7')
+        paginas_manual_card_content.pack(fill=tk.X, padx=20, pady=15)
+
+        tk.Label(
+            paginas_manual_card_content,
+            text="📋  Especifique as Páginas para Extração",
+            font=('Inter', 11, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 12))
+
+        # Input páginas INCRA
+        incra_pag_manual_frame = tk.Frame(paginas_manual_card_content, bg='#FEF3C7')
+        incra_pag_manual_frame.pack(fill=tk.X, pady=(0, 10))
+
+        tk.Label(
+            incra_pag_manual_frame,
+            text="📄  Páginas do Memorial INCRA:",
+            font=('Inter', 10, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        tk.Entry(
+            incra_pag_manual_frame,
+            textvariable=self.paginas_incra_manual,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(fill=tk.X, ipady=8, ipadx=10)
+
+        tk.Label(
+            incra_pag_manual_frame,
+            text="Ex: 1,2,4,7 (separe os números por vírgula)",
+            font=('Inter', 8),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(3, 0))
+
+        # Input páginas Projeto
+        projeto_pag_manual_frame = tk.Frame(paginas_manual_card_content, bg='#FEF3C7')
+        projeto_pag_manual_frame.pack(fill=tk.X)
+
+        tk.Label(
+            projeto_pag_manual_frame,
+            text="📐  Páginas da Planta/Projeto:",
+            font=('Inter', 10, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        tk.Entry(
+            projeto_pag_manual_frame,
+            textvariable=self.paginas_projeto_manual,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(fill=tk.X, ipady=8, ipadx=10)
+
+        tk.Label(
+            projeto_pag_manual_frame,
+            text="Ex: 5,6 (separe os números por vírgula)",
+            font=('Inter', 8),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(3, 0))
 
         # Seleção INCRA
         incra_card = tk.Frame(
@@ -1815,37 +1957,71 @@ class VerificadorGeorreferenciamento:
                 # Criar janela de progresso
                 self._criar_janela_progresso("Comparação em Andamento")
 
-                # Etapa 1: Preparação (0-10%)
-                self._atualizar_progresso(
-                    5,
-                    "Preparando para processar...",
-                    "Verificando arquivos e configurações iniciais"
-                )
-                self._atualizar_status("🔄 Processando documentos...")
+                modo = self.modo_manual_tipo.get()
+                incra_file = self.incra_path.get()
+                projeto_file = self.projeto_path.get()
 
-                # Etapa 2: Extrair dados INCRA (10-40%)
+                # Se for modo "por_paginas", extrair páginas especificadas primeiro
+                if modo == "por_paginas":
+                    # Etapa 1: Extrair páginas do INCRA (0-20%)
+                    self._atualizar_progresso(
+                        5,
+                        "Extraindo páginas do INCRA...",
+                        f"Extraindo páginas: {self.paginas_incra_manual.get()}"
+                    )
+                    self._atualizar_status("📄 Extraindo páginas do Memorial INCRA...")
+                    incra_file = self._extrair_paginas_manual(
+                        self.incra_path.get(),
+                        self.paginas_incra_manual.get(),
+                        "incra_manual_extraido.pdf"
+                    )
+                    self._atualizar_progresso(15, "Páginas do INCRA extraídas!", "")
+
+                    # Etapa 2: Extrair páginas do Projeto (20-35%)
+                    self._atualizar_progresso(
+                        20,
+                        "Extraindo páginas do Projeto...",
+                        f"Extraindo páginas: {self.paginas_projeto_manual.get()}"
+                    )
+                    self._atualizar_status("📐 Extraindo páginas da Planta/Projeto...")
+                    projeto_file = self._extrair_paginas_manual(
+                        self.projeto_path.get(),
+                        self.paginas_projeto_manual.get(),
+                        "projeto_manual_extraido.pdf"
+                    )
+                    self._atualizar_progresso(35, "Páginas do Projeto extraídas!", "")
+                else:
+                    # Modo completo: Preparação
+                    self._atualizar_progresso(
+                        5,
+                        "Preparando para processar...",
+                        "Verificando arquivos e configurações iniciais"
+                    )
+                    self._atualizar_status("🔄 Processando documentos...")
+
+                # Etapa 3: Extrair dados INCRA (35-55%)
                 self._atualizar_progresso(
-                    15,
+                    40,
                     "Extraindo dados do INCRA...",
                     "Lendo PDF do INCRA e convertendo para Excel usando IA"
                 )
                 self._atualizar_status("📄 Extraindo dados do INCRA...")
                 self.incra_excel_path, self.incra_data = self._extrair_pdf_para_excel(
-                    self.incra_path.get(), "incra"
+                    incra_file, "incra"
                 )
-                self._atualizar_progresso(40, "INCRA extraído com sucesso!", "")
+                self._atualizar_progresso(55, "INCRA extraído com sucesso!", "")
 
-                # Etapa 3: Extrair dados Projeto (40-70%)
+                # Etapa 4: Extrair dados Projeto (55-75%)
                 self._atualizar_progresso(
-                    45,
+                    60,
                     "Extraindo dados do Projeto...",
                     "Lendo PDF do Projeto/Planta e convertendo para Excel usando IA"
                 )
                 self._atualizar_status("📐 Extraindo dados do Projeto...")
                 self.projeto_excel_path, self.projeto_data = self._extrair_pdf_para_excel(
-                    self.projeto_path.get(), "normal"
+                    projeto_file, "normal"
                 )
-                self._atualizar_progresso(70, "Projeto extraído com sucesso!", "")
+                self._atualizar_progresso(75, "Projeto extraído com sucesso!", "")
 
                 # Etapa 4: Gerar relatório (70-90%)
                 self._atualizar_progresso(
@@ -1902,6 +2078,16 @@ class VerificadorGeorreferenciamento:
             messagebox.showerror("Erro", "Por favor, selecione o arquivo Projeto/Planta.")
             return False
 
+        # Validação específica para modo "por_paginas"
+        if self.modo_manual_tipo.get() == "por_paginas":
+            if not self.paginas_incra_manual.get().strip():
+                messagebox.showerror("Erro", "Por favor, especifique as páginas do Memorial INCRA.")
+                return False
+
+            if not self.paginas_projeto_manual.get().strip():
+                messagebox.showerror("Erro", "Por favor, especifique as páginas da Planta/Projeto.")
+                return False
+
         if not self.numero_prenotacao.get():
             messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
             return False
@@ -1923,41 +2109,30 @@ class VerificadorGeorreferenciamento:
                 self._criar_janela_progresso("Processamento em Andamento")
 
                 modo = self.modo_automatico_tipo.get()
-                pdf_path = None
 
-                # Etapas 1 e 2: Buscar arquivo e converter (apenas para modos IA e paginas_auto)
-                if modo in ["ia", "paginas_auto"]:
-                    # Etapa 1: Buscar arquivo TIFF (0-15%)
-                    self._atualizar_progresso(
-                        5,
-                        "Buscando arquivo TIFF na rede...",
-                        f"Procurando documento na rede do cartório (Prenotação: {self.numero_prenotacao.get()})"
-                    )
-                    self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
-                    tiff_path = self._buscar_arquivo_tiff()
+                # Etapa 1: Buscar arquivo TIFF (0-15%)
+                self._atualizar_progresso(
+                    5,
+                    "Buscando arquivo TIFF na rede...",
+                    f"Procurando documento na rede do cartório (Prenotação: {self.numero_prenotacao.get()})"
+                )
+                self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
+                tiff_path = self._buscar_arquivo_tiff()
 
-                    if not tiff_path:
-                        raise Exception("Arquivo TIFF não encontrado na rede.")
+                if not tiff_path:
+                    raise Exception("Arquivo TIFF não encontrado na rede.")
 
-                    self._atualizar_progresso(15, "Arquivo encontrado!", f"Localizado: {tiff_path}")
+                self._atualizar_progresso(15, "Arquivo encontrado!", f"Localizado: {tiff_path}")
 
-                    # Etapa 2: Converter para PDF (15-25%)
-                    self._atualizar_progresso(
-                        18,
-                        "Convertendo TIFF para PDF...",
-                        "Copiando arquivo e convertendo formato"
-                    )
-                    self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
-                    pdf_path = self._converter_tiff_para_pdf(tiff_path)
-                    self._atualizar_progresso(25, "PDF criado com sucesso!", "")
-                else:
-                    # Modo paginas_manual: Usar arquivo fornecido pelo usuário
-                    pdf_path = self.arquivo_manual_path.get()
-                    self._atualizar_progresso(
-                        25,
-                        "Arquivo selecionado!",
-                        f"Usando arquivo: {Path(pdf_path).name}"
-                    )
+                # Etapa 2: Converter para PDF (15-25%)
+                self._atualizar_progresso(
+                    18,
+                    "Convertendo TIFF para PDF...",
+                    "Copiando arquivo e convertendo formato"
+                )
+                self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
+                pdf_path = self._converter_tiff_para_pdf(tiff_path)
+                self._atualizar_progresso(25, "PDF criado com sucesso!", "")
 
                 # Etapa 3: Extrair Memorial INCRA (25-50%)
                 if modo == "ia":
@@ -1970,16 +2145,16 @@ class VerificadorGeorreferenciamento:
                     self._atualizar_status("📄 Extraindo Memorial INCRA com IA...")
                     self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
                 else:
-                    # Modo Páginas (Auto ou Manual): Extrair páginas especificadas pelo usuário
+                    # Modo Páginas: Extrair páginas especificadas pelo usuário
                     self._atualizar_progresso(
                         30,
                         "Extraindo Memorial INCRA...",
-                        f"Extraindo páginas especificadas: {self.paginas_incra.get()}"
+                        f"Extraindo páginas especificadas: {self.paginas_incra_auto.get()}"
                     )
                     self._atualizar_status("📄 Extraindo Memorial INCRA (páginas especificadas)...")
                     self.pdf_extraido_incra = self._extrair_paginas_manual(
                         pdf_path,
-                        self.paginas_incra.get(),
+                        self.paginas_incra_auto.get(),
                         "memorial_incra_extraido.pdf"
                     )
 
@@ -1999,16 +2174,16 @@ class VerificadorGeorreferenciamento:
                     self._atualizar_status("📐 Extraindo Planta/Projeto com IA...")
                     self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
                 else:
-                    # Modo Páginas (Auto ou Manual): Extrair páginas especificadas pelo usuário
+                    # Modo Páginas: Extrair páginas especificadas pelo usuário
                     self._atualizar_progresso(
                         55,
                         "Extraindo Planta/Projeto...",
-                        f"Extraindo páginas especificadas: {self.paginas_projeto.get()}"
+                        f"Extraindo páginas especificadas: {self.paginas_projeto_auto.get()}"
                     )
                     self._atualizar_status("📐 Extraindo Planta/Projeto (páginas especificadas)...")
                     self.pdf_extraido_projeto = self._extrair_paginas_manual(
                         pdf_path,
-                        self.paginas_projeto.get(),
+                        self.paginas_projeto_auto.get(),
                         "projeto_extraido.pdf"
                     )
 
@@ -2069,47 +2244,26 @@ class VerificadorGeorreferenciamento:
         """Valida entradas do modo automático."""
         modo = self.modo_automatico_tipo.get()
 
+        # Modo Automático sempre precisa de prenotação
+        if not self.numero_prenotacao.get():
+            messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
+            return False
+
         # Validações específicas por sub-modo
         if modo == "ia":
-            # Modo IA: precisa de prenotação e API Key
-            if not self.numero_prenotacao.get():
-                messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
-                return False
-
+            # Modo IA: precisa de API Key
             api_key = self.config_manager.get_api_key()
             if not api_key:
                 messagebox.showerror("Erro", "Por favor, configure a API Key primeiro.")
                 return False
 
-        elif modo == "paginas_auto":
-            # Modo Páginas Automático: precisa de prenotação e números de páginas
-            if not self.numero_prenotacao.get():
-                messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
-                return False
-
-            if not self.paginas_incra.get().strip():
+        elif modo == "paginas":
+            # Modo Páginas: precisa de números de páginas
+            if not self.paginas_incra_auto.get().strip():
                 messagebox.showerror("Erro", "Por favor, especifique as páginas do Memorial INCRA.")
                 return False
 
-            if not self.paginas_projeto.get().strip():
-                messagebox.showerror("Erro", "Por favor, especifique as páginas da Planta/Projeto.")
-                return False
-
-        elif modo == "paginas_manual":
-            # Modo Páginas Manual: precisa de arquivo selecionado, prenotação e números de páginas
-            if not self.arquivo_manual_path.get():
-                messagebox.showerror("Erro", "Por favor, selecione o arquivo PDF primeiro.")
-                return False
-
-            if not self.numero_prenotacao.get():
-                messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
-                return False
-
-            if not self.paginas_incra.get().strip():
-                messagebox.showerror("Erro", "Por favor, especifique as páginas do Memorial INCRA.")
-                return False
-
-            if not self.paginas_projeto.get().strip():
+            if not self.paginas_projeto_auto.get().strip():
                 messagebox.showerror("Erro", "Por favor, especifique as páginas da Planta/Projeto.")
                 return False
 
