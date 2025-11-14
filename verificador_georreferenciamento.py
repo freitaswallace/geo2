@@ -578,6 +578,35 @@ class VerificadorGeorreferenciamento:
         )
         self.resultado_text.pack(fill=tk.BOTH, expand=True, ipady=10, ipadx=10)
 
+        # Botão Limpar (para nova conferência)
+        limpar_btn_frame = tk.Frame(result_content, bg=self.colors['bg_card'])
+        limpar_btn_frame.pack(pady=(15, 0))
+
+        self.btn_limpar = tk.Button(
+            limpar_btn_frame,
+            text="🔄  LIMPAR E FAZER NOVA CONFERÊNCIA",
+            command=self._limpar_dados,
+            font=('Inter', 11, 'bold'),
+            bg='#F59E0B',
+            fg='white',
+            relief=tk.FLAT,
+            padx=25,
+            pady=12,
+            cursor='hand2',
+            activebackground='#D97706',
+            activeforeground='white'
+        )
+        self.btn_limpar.pack()
+
+        # Hover effect
+        def on_enter_limpar(e):
+            self.btn_limpar.config(bg='#D97706')
+        def on_leave_limpar(e):
+            self.btn_limpar.config(bg='#F59E0B')
+
+        self.btn_limpar.bind('<Enter>', on_enter_limpar)
+        self.btn_limpar.bind('<Leave>', on_leave_limpar)
+
         # ===== BARRA DE STATUS =====
         status_frame = tk.Frame(main_frame, bg=self.colors['bg_card'], height=40)
         status_frame.pack(fill=tk.X, pady=(15, 25), padx=25)
@@ -2763,6 +2792,83 @@ class VerificadorGeorreferenciamento:
             import traceback
             traceback.print_exc()
             messagebox.showerror("Erro", f"❌ Erro ao limpar backups:\n{str(e)}")
+
+    def _limpar_dados(self):
+        """Limpa todos os dados para permitir uma nova conferência."""
+        # Confirmar com o usuário
+        resposta = messagebox.askyesno(
+            "Confirmar Limpeza",
+            "Deseja limpar todos os dados e fazer uma nova conferência?\n\n"
+            "Isso irá resetar:\n"
+            "• Todos os campos de entrada\n"
+            "• Arquivos selecionados\n"
+            "• Dados extraídos\n"
+            "• Relatório de comparação\n\n"
+            "Os arquivos de backup permanecerão salvos.",
+            icon='question'
+        )
+
+        if not resposta:
+            return
+
+        try:
+            # Limpar campos de entrada - Modo Automático
+            self.numero_prenotacao.set("")
+            self.paginas_incra_auto.set("")
+            self.paginas_projeto_auto.set("")
+
+            # Limpar campos de entrada - Modo Manual
+            self.incra_path.set("")
+            self.projeto_path.set("")
+            self.paginas_incra_manual.set("")
+            self.paginas_projeto_manual.set("")
+
+            # Resetar variáveis de dados extraídos
+            self.incra_excel_path = None
+            self.projeto_excel_path = None
+            self.incra_data = None
+            self.projeto_data = None
+            self.pdf_extraido_incra = None
+            self.pdf_extraido_projeto = None
+
+            # Limpar área de resultados
+            self.resultado_text.delete(1.0, tk.END)
+            self.resultado_text.insert(1.0, "Pronto para uma nova conferência...")
+
+            # Esconder preview frame (se existir)
+            if hasattr(self, 'preview_frame'):
+                self.preview_frame.pack_forget()
+
+            # Resetar status
+            self._atualizar_status("✨ Pronto para iniciar nova conferência")
+
+            # Resetar sub-modos para padrão
+            self.modo_automatico_tipo.set("paginas")
+            self.modo_manual_tipo.set("completo")
+
+            # Atualizar visuals dos sub-modos
+            if hasattr(self, '_atualizar_visual_submodo_auto'):
+                self._atualizar_visual_submodo_auto()
+            if hasattr(self, '_atualizar_visual_submodo_manual'):
+                self._atualizar_visual_submodo_manual()
+
+            # Esconder campos de páginas
+            if hasattr(self, 'paginas_frame_auto'):
+                self.paginas_frame_auto.pack_forget()
+            if hasattr(self, 'paginas_frame_manual'):
+                self.paginas_frame_manual.pack_forget()
+
+            # Atualizar modo para refletir estado inicial
+            self._alternar_modo_automatico()
+            self._alternar_modo_manual()
+
+            print("✅ Dados limpos com sucesso! Pronto para nova conferência.")
+
+        except Exception as e:
+            print(f"❌ Erro ao limpar dados: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("Erro", f"❌ Erro ao limpar dados:\n{str(e)}")
 
     def _gerar_previews(self):
         """Gera thumbnails dos documentos extraídos."""
