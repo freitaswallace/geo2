@@ -134,6 +134,11 @@ class VerificadorGeorreferenciamento:
         self.numero_prenotacao = tk.StringVar()
         self.modo_atual = tk.StringVar(value="automatico")
 
+        # Variáveis para sub-modo automático
+        self.modo_automatico_tipo = tk.StringVar(value="paginas")  # "ia" ou "paginas"
+        self.paginas_incra = tk.StringVar()
+        self.paginas_projeto = tk.StringVar()
+
         # Variáveis para armazenar dados extraídos
         self.incra_excel_path: Optional[str] = None
         self.projeto_excel_path: Optional[str] = None
@@ -692,6 +697,15 @@ class VerificadorGeorreferenciamento:
             self.automatico_content.pack_forget()
             self.manual_content.pack(fill=tk.BOTH, expand=True)
 
+    def _alternar_modo_automatico(self):
+        """Alterna entre sub-modos do modo automático (IA vs Páginas)."""
+        if self.modo_automatico_tipo.get() == "paginas":
+            # Mostrar campos de páginas
+            self.paginas_frame.pack(fill=tk.X, pady=(0, 20))
+        else:  # ia
+            # Esconder campos de páginas
+            self.paginas_frame.pack_forget()
+
     def _criar_modo_automatico_content(self):
         """Cria conteúdo do modo automático."""
         self.automatico_content = self._criar_card(self.content_frame)
@@ -707,6 +721,141 @@ class VerificadorGeorreferenciamento:
             fg=self.colors['text_medium'],
             bg=self.colors['bg_card']
         ).pack(pady=(0, 25))
+
+        # ===== SELETOR DE SUB-MODO =====
+        submodo_card = tk.Frame(
+            content,
+            bg='#F3F4F6',
+            highlightthickness=2,
+            highlightbackground=self.colors['border']
+        )
+        submodo_card.pack(fill=tk.X, pady=(0, 20))
+
+        submodo_content = tk.Frame(submodo_card, bg='#F3F4F6')
+        submodo_content.pack(fill=tk.X, padx=20, pady=15)
+
+        tk.Label(
+            submodo_content,
+            text="⚙️  Tipo de Processamento Automático",
+            font=('Inter', 11, 'bold'),
+            fg=self.colors['text_dark'],
+            bg='#F3F4F6'
+        ).pack(anchor=tk.W, pady=(0, 12))
+
+        # Frame para os radio buttons
+        radio_frame = tk.Frame(submodo_content, bg='#F3F4F6')
+        radio_frame.pack(fill=tk.X)
+
+        tk.Radiobutton(
+            radio_frame,
+            text="📄  Por Páginas (Manual) - Você especifica quais páginas extrair",
+            variable=self.modo_automatico_tipo,
+            value="paginas",
+            font=('Inter', 10),
+            bg='#F3F4F6',
+            activebackground='#F3F4F6',
+            selectcolor='#F3F4F6',
+            cursor='hand2',
+            command=self._alternar_modo_automatico
+        ).pack(anchor=tk.W, pady=3)
+
+        tk.Radiobutton(
+            radio_frame,
+            text="🤖  Por IA - A Inteligência Artificial detecta automaticamente",
+            variable=self.modo_automatico_tipo,
+            value="ia",
+            font=('Inter', 10),
+            bg='#F3F4F6',
+            activebackground='#F3F4F6',
+            selectcolor='#F3F4F6',
+            cursor='hand2',
+            command=self._alternar_modo_automatico
+        ).pack(anchor=tk.W, pady=3)
+
+        # ===== CAMPOS DE PÁGINAS (visível apenas no modo "paginas") =====
+        self.paginas_frame = tk.Frame(content, bg=self.colors['bg_card'])
+        self.paginas_frame.pack(fill=tk.X, pady=(0, 20))
+
+        paginas_card = tk.Frame(
+            self.paginas_frame,
+            bg='#FEF3C7',
+            highlightthickness=2,
+            highlightbackground='#FCD34D'
+        )
+        paginas_card.pack(fill=tk.X)
+
+        paginas_card_content = tk.Frame(paginas_card, bg='#FEF3C7')
+        paginas_card_content.pack(fill=tk.X, padx=20, pady=15)
+
+        tk.Label(
+            paginas_card_content,
+            text="📋  Especifique as Páginas para Extração",
+            font=('Inter', 11, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 12))
+
+        # Input páginas INCRA
+        incra_pag_frame = tk.Frame(paginas_card_content, bg='#FEF3C7')
+        incra_pag_frame.pack(fill=tk.X, pady=(0, 10))
+
+        tk.Label(
+            incra_pag_frame,
+            text="📄  Páginas do Memorial INCRA:",
+            font=('Inter', 10, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        tk.Entry(
+            incra_pag_frame,
+            textvariable=self.paginas_incra,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(fill=tk.X, ipady=8, ipadx=10)
+
+        tk.Label(
+            incra_pag_frame,
+            text="Ex: 1,2,4,7 (separe os números por vírgula)",
+            font=('Inter', 8),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(3, 0))
+
+        # Input páginas Projeto
+        projeto_pag_frame = tk.Frame(paginas_card_content, bg='#FEF3C7')
+        projeto_pag_frame.pack(fill=tk.X)
+
+        tk.Label(
+            projeto_pag_frame,
+            text="📐  Páginas da Planta/Projeto:",
+            font=('Inter', 10, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(0, 5))
+
+        tk.Entry(
+            projeto_pag_frame,
+            textvariable=self.paginas_projeto,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(fill=tk.X, ipady=8, ipadx=10)
+
+        tk.Label(
+            projeto_pag_frame,
+            text="Ex: 5,6 (separe os números por vírgula)",
+            font=('Inter', 8),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(3, 0))
 
         # Botão grande de iniciar
         self.btn_iniciar_automatico = tk.Button(
@@ -1485,23 +1634,61 @@ class VerificadorGeorreferenciamento:
                 self._atualizar_progresso(25, "PDF criado com sucesso!", "")
 
                 # Etapa 3: Extrair Memorial INCRA (25-50%)
-                self._atualizar_progresso(
-                    30,
-                    "Extraindo Memorial INCRA...",
-                    "Usando IA para identificar e extrair páginas do Memorial INCRA"
-                )
-                self._atualizar_status("📄 Extraindo Memorial INCRA...")
-                self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+                if self.modo_automatico_tipo.get() == "ia":
+                    # Modo IA: Usar Gemini para detectar páginas
+                    self._atualizar_progresso(
+                        30,
+                        "Extraindo Memorial INCRA...",
+                        "Usando IA para identificar e extrair páginas do Memorial INCRA"
+                    )
+                    self._atualizar_status("📄 Extraindo Memorial INCRA com IA...")
+                    self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+                else:
+                    # Modo Páginas: Extrair páginas especificadas pelo usuário
+                    self._atualizar_progresso(
+                        30,
+                        "Extraindo Memorial INCRA...",
+                        f"Extraindo páginas especificadas: {self.paginas_incra.get()}"
+                    )
+                    self._atualizar_status("📄 Extraindo Memorial INCRA (páginas manuais)...")
+                    self.pdf_extraido_incra = self._extrair_paginas_manual(
+                        pdf_path,
+                        self.paginas_incra.get(),
+                        "memorial_incra_extraido.pdf"
+                    )
+
+                if not self.pdf_extraido_incra:
+                    raise Exception("Falha ao extrair Memorial INCRA")
+
                 self._atualizar_progresso(50, "Memorial INCRA extraído!", "")
 
                 # Etapa 4: Extrair Planta/Projeto (50-75%)
-                self._atualizar_progresso(
-                    55,
-                    "Extraindo Planta/Projeto...",
-                    "Usando IA para identificar e extrair páginas da Planta/Projeto"
-                )
-                self._atualizar_status("📐 Extraindo Planta/Projeto...")
-                self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+                if self.modo_automatico_tipo.get() == "ia":
+                    # Modo IA: Usar Gemini para detectar páginas
+                    self._atualizar_progresso(
+                        55,
+                        "Extraindo Planta/Projeto...",
+                        "Usando IA para identificar e extrair páginas da Planta/Projeto"
+                    )
+                    self._atualizar_status("📐 Extraindo Planta/Projeto com IA...")
+                    self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+                else:
+                    # Modo Páginas: Extrair páginas especificadas pelo usuário
+                    self._atualizar_progresso(
+                        55,
+                        "Extraindo Planta/Projeto...",
+                        f"Extraindo páginas especificadas: {self.paginas_projeto.get()}"
+                    )
+                    self._atualizar_status("📐 Extraindo Planta/Projeto (páginas manuais)...")
+                    self.pdf_extraido_projeto = self._extrair_paginas_manual(
+                        pdf_path,
+                        self.paginas_projeto.get(),
+                        "projeto_extraido.pdf"
+                    )
+
+                if not self.pdf_extraido_projeto:
+                    raise Exception("Falha ao extrair Planta/Projeto")
+
                 self._atualizar_progresso(75, "Planta/Projeto extraída!", "")
 
                 # Etapa 5: Salvar backups (75-85%)
@@ -1554,14 +1741,27 @@ class VerificadorGeorreferenciamento:
 
     def _validar_entrada_automatico(self) -> bool:
         """Valida entradas do modo automático."""
-        api_key = self.config_manager.get_api_key()
-        if not api_key:
-            messagebox.showerror("Erro", "Por favor, configure a API Key primeiro.")
-            return False
-
+        # Validar número de prenotação (sempre necessário)
         if not self.numero_prenotacao.get():
             messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
             return False
+
+        # Validações específicas por sub-modo
+        if self.modo_automatico_tipo.get() == "ia":
+            # Modo IA precisa da API Key
+            api_key = self.config_manager.get_api_key()
+            if not api_key:
+                messagebox.showerror("Erro", "Por favor, configure a API Key primeiro.")
+                return False
+        else:  # modo "paginas"
+            # Modo Páginas precisa dos números de páginas
+            if not self.paginas_incra.get().strip():
+                messagebox.showerror("Erro", "Por favor, especifique as páginas do Memorial INCRA.")
+                return False
+
+            if not self.paginas_projeto.get().strip():
+                messagebox.showerror("Erro", "Por favor, especifique as páginas da Planta/Projeto.")
+                return False
 
         return True
 
@@ -1620,8 +1820,74 @@ class VerificadorGeorreferenciamento:
 
         return str(pdf_path)
 
+    def _extrair_paginas_manual(self, pdf_path: str, paginas_str: str, output_filename: str) -> str:
+        """
+        Extrai páginas específicas do PDF baseado numa string de números.
+
+        Args:
+            pdf_path: Caminho do PDF original
+            paginas_str: String com números de páginas separados por vírgula (ex: "1,2,4,7")
+            output_filename: Nome do arquivo de saída
+
+        Returns:
+            Caminho do PDF extraído
+        """
+        output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+        output_pdf = output_dir / output_filename
+
+        # Parsear a string de páginas
+        try:
+            # Remover espaços e split por vírgula
+            paginas_str = paginas_str.strip()
+            if not paginas_str:
+                raise ValueError("Nenhuma página especificada")
+
+            # Converter para lista de inteiros (páginas começam em 0 no PyPDF2)
+            paginas_lista = [int(p.strip()) - 1 for p in paginas_str.split(',')]
+
+            if not paginas_lista:
+                raise ValueError("Nenhuma página válida especificada")
+
+        except ValueError as e:
+            print(f"❌ Erro ao parsear páginas: {e}")
+            messagebox.showerror(
+                "Erro",
+                f"Formato de páginas inválido!\n\nUse números separados por vírgula.\nExemplo: 1,2,4,7"
+            )
+            return ""
+
+        # Abrir o PDF e extrair as páginas
+        try:
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                writer = PyPDF2.PdfWriter()
+
+                total_paginas = len(reader.pages)
+
+                # Validar e adicionar cada página
+                for page_num in paginas_lista:
+                    if 0 <= page_num < total_paginas:
+                        writer.add_page(reader.pages[page_num])
+                        print(f"✅ Página {page_num + 1} adicionada")
+                    else:
+                        print(f"⚠️ Página {page_num + 1} não existe no PDF (total: {total_paginas})")
+
+                # Salvar PDF extraído
+                with open(output_pdf, 'wb') as output_file:
+                    writer.write(output_file)
+
+                print(f"✅ PDF criado com {len(writer.pages)} página(s): {output_pdf}")
+                return str(output_pdf)
+
+        except Exception as e:
+            print(f"❌ Erro ao extrair páginas: {e}")
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("Erro", f"Erro ao extrair páginas do PDF:\n{e}")
+            return ""
+
     def _extrair_memorial_incra_do_pdf(self, pdf_path: str) -> str:
-        """Extrai páginas do Memorial INCRA do PDF."""
+        """Extrai páginas do Memorial INCRA do PDF usando IA."""
         output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
         output_pdf = output_dir / "memorial_incra_extraido.pdf"
 
