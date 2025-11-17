@@ -40,6 +40,9 @@ try:
 except ImportError as e:
     print(f"❌ Erro: Biblioteca necessária não encontrada: {e}")
     print("\nInstale as dependências com:")
+    print("pip install pdf2image Pillow google-generativeai openpyxl PyPDF2")
+    print("\nNota: Também é necessário ter o 'poppler-utils' instalado no sistema.")
+    sys.exit(1)
 
 # Configurar para esconder janelas do CMD no Windows
 if platform.system() == 'Windows':
@@ -56,9 +59,6 @@ if platform.system() == 'Windows':
         return original_popen(*args, **kwargs)
 
     subprocess.Popen = no_console_popen
-    print("pip install pdf2image Pillow google-generativeai openpyxl PyPDF2")
-    print("\nNota: Também é necessário ter o 'poppler-utils' instalado no sistema.")
-    sys.exit(1)
 
 
 class ConfigManager:
