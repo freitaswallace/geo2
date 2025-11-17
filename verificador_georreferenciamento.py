@@ -95,6 +95,14 @@ class VerificadorGeorreferenciamento:
         self.numero_prenotacao = tk.StringVar()
         self.modo_atual = tk.StringVar(value="automatico")
 
+        # Variáveis para números de páginas (formato: '1,3-5')
+        self.incra_paginas = tk.StringVar()
+        self.projeto_paginas = tk.StringVar()
+
+        # Variáveis para anexos de imagens/PDFs específicos
+        self.incra_anexo_path = tk.StringVar()
+        self.projeto_anexo_path = tk.StringVar()
+
         # Variáveis para armazenar dados extraídos
         self.incra_excel_path: Optional[str] = None
         self.projeto_excel_path: Optional[str] = None
@@ -734,8 +742,9 @@ class VerificadorGeorreferenciamento:
             bg='#FEF3C7'
         ).pack(anchor=tk.W, pady=(0, 10))
 
+        # PDF Base
         incra_input_frame = tk.Frame(incra_content, bg='#FEF3C7')
-        incra_input_frame.pack(fill=tk.X)
+        incra_input_frame.pack(fill=tk.X, pady=(0, 8))
 
         tk.Entry(
             incra_input_frame,
@@ -751,7 +760,7 @@ class VerificadorGeorreferenciamento:
 
         tk.Button(
             incra_input_frame,
-            text="📁 Selecionar",
+            text="📁 Selecionar PDF",
             command=lambda: self._selecionar_arquivo(self.incra_path, "INCRA"),
             font=('Inter', 10, 'bold'),
             bg='#F59E0B',
@@ -761,6 +770,63 @@ class VerificadorGeorreferenciamento:
             pady=8,
             cursor='hand2'
         ).pack(side=tk.RIGHT, padx=(10, 0))
+
+        # Números de Páginas
+        tk.Label(
+            incra_content,
+            text="Números de páginas (ex: 1,3-5) OU Anexo:",
+            font=('Inter', 9),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(anchor=tk.W, pady=(5, 3))
+
+        incra_paginas_frame = tk.Frame(incra_content, bg='#FEF3C7')
+        incra_paginas_frame.pack(fill=tk.X)
+
+        tk.Entry(
+            incra_paginas_frame,
+            textvariable=self.incra_paginas,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=8, ipadx=10)
+
+        tk.Label(
+            incra_paginas_frame,
+            text="OU",
+            font=('Inter', 10, 'bold'),
+            fg='#92400E',
+            bg='#FEF3C7'
+        ).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(
+            incra_paginas_frame,
+            text="📎 Anexar",
+            command=lambda: self._selecionar_anexo("INCRA"),
+            font=('Inter', 10, 'bold'),
+            bg='#D97706',
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2'
+        ).pack(side=tk.RIGHT)
+
+        # Mostrar anexo selecionado
+        tk.Entry(
+            incra_content,
+            textvariable=self.incra_anexo_path,
+            font=('Inter', 9),
+            state='readonly',
+            relief=tk.SOLID,
+            bg='#FFFBEB',
+            fg='#92400E',
+            borderwidth=1,
+            highlightthickness=0
+        ).pack(fill=tk.X, pady=(5, 0), ipady=5, ipadx=10)
 
         # Seleção Projeto
         projeto_card = tk.Frame(
@@ -782,8 +848,9 @@ class VerificadorGeorreferenciamento:
             bg='#DBEAFE'
         ).pack(anchor=tk.W, pady=(0, 10))
 
+        # PDF Base
         projeto_input_frame = tk.Frame(projeto_content, bg='#DBEAFE')
-        projeto_input_frame.pack(fill=tk.X)
+        projeto_input_frame.pack(fill=tk.X, pady=(0, 8))
 
         tk.Entry(
             projeto_input_frame,
@@ -799,7 +866,7 @@ class VerificadorGeorreferenciamento:
 
         tk.Button(
             projeto_input_frame,
-            text="📁 Selecionar",
+            text="📁 Selecionar PDF",
             command=lambda: self._selecionar_arquivo(self.projeto_path, "Projeto"),
             font=('Inter', 10, 'bold'),
             bg='#3B82F6',
@@ -809,6 +876,63 @@ class VerificadorGeorreferenciamento:
             pady=8,
             cursor='hand2'
         ).pack(side=tk.RIGHT, padx=(10, 0))
+
+        # Números de Páginas
+        tk.Label(
+            projeto_content,
+            text="Números de páginas (ex: 1,3-5) OU Anexo:",
+            font=('Inter', 9),
+            fg='#1E40AF',
+            bg='#DBEAFE'
+        ).pack(anchor=tk.W, pady=(5, 3))
+
+        projeto_paginas_frame = tk.Frame(projeto_content, bg='#DBEAFE')
+        projeto_paginas_frame.pack(fill=tk.X)
+
+        tk.Entry(
+            projeto_paginas_frame,
+            textvariable=self.projeto_paginas,
+            font=('Inter', 10),
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            borderwidth=2,
+            highlightthickness=0
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, ipady=8, ipadx=10)
+
+        tk.Label(
+            projeto_paginas_frame,
+            text="OU",
+            font=('Inter', 10, 'bold'),
+            fg='#1E40AF',
+            bg='#DBEAFE'
+        ).pack(side=tk.LEFT, padx=10)
+
+        tk.Button(
+            projeto_paginas_frame,
+            text="📎 Anexar",
+            command=lambda: self._selecionar_anexo("PROJETO"),
+            font=('Inter', 10, 'bold'),
+            bg='#2563EB',
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2'
+        ).pack(side=tk.RIGHT)
+
+        # Mostrar anexo selecionado
+        tk.Entry(
+            projeto_content,
+            textvariable=self.projeto_anexo_path,
+            font=('Inter', 9),
+            state='readonly',
+            relief=tk.SOLID,
+            bg='#EFF6FF',
+            fg='#1E40AF',
+            borderwidth=1,
+            highlightthickness=0
+        ).pack(fill=tk.X, pady=(5, 0), ipady=5, ipadx=10)
 
         # Botão de comparação
         tk.Button(
@@ -950,6 +1074,27 @@ class VerificadorGeorreferenciamento:
         if filename:
             variavel.set(filename)
 
+    def _selecionar_anexo(self, tipo):
+        """Abre diálogo para selecionar anexo (PDF ou imagens)."""
+        filename = filedialog.askopenfilename(
+            title=f"Selecionar anexo de {tipo}",
+            filetypes=[
+                ("PDF e Imagens", "*.pdf *.png *.jpg *.jpeg *.tiff *.tif"),
+                ("PDF Files", "*.pdf"),
+                ("Imagens", "*.png *.jpg *.jpeg *.tiff *.tif"),
+                ("All Files", "*.*")
+            ]
+        )
+        if filename:
+            if tipo == "INCRA":
+                self.incra_anexo_path.set(filename)
+                # Limpar campo de páginas quando anexo é selecionado
+                self.incra_paginas.set("")
+            elif tipo == "PROJETO":
+                self.projeto_anexo_path.set(filename)
+                # Limpar campo de páginas quando anexo é selecionado
+                self.projeto_paginas.set("")
+
     def _atualizar_status(self, mensagem: str):
         """Atualiza a barra de status."""
         # Detectar tipo de mensagem e ajustar cor
@@ -985,15 +1130,35 @@ class VerificadorGeorreferenciamento:
                 self._desabilitar_botoes()
                 self._atualizar_status("🔄 Processando documentos...")
 
+                # Determinar fonte de dados para INCRA
+                if self.incra_anexo_path.get():
+                    # Usar anexo
+                    incra_source = self.incra_anexo_path.get()
+                    incra_paginas = None
+                else:
+                    # Usar PDF base com páginas especificadas
+                    incra_source = self.incra_path.get()
+                    incra_paginas = self.incra_paginas.get()
+
+                # Determinar fonte de dados para PROJETO
+                if self.projeto_anexo_path.get():
+                    # Usar anexo
+                    projeto_source = self.projeto_anexo_path.get()
+                    projeto_paginas = None
+                else:
+                    # Usar PDF base com páginas especificadas
+                    projeto_source = self.projeto_path.get()
+                    projeto_paginas = self.projeto_paginas.get()
+
                 # Extrair dados para Excel
                 self._atualizar_status("📄 Extraindo dados do INCRA...")
                 self.incra_excel_path, self.incra_data = self._extrair_pdf_para_excel(
-                    self.incra_path.get(), "incra"
+                    incra_source, "incra", incra_paginas
                 )
 
                 self._atualizar_status("📐 Extraindo dados do Projeto...")
                 self.projeto_excel_path, self.projeto_data = self._extrair_pdf_para_excel(
-                    self.projeto_path.get(), "normal"
+                    projeto_source, "normal", projeto_paginas
                 )
 
                 # Gerar relatório
@@ -1018,23 +1183,61 @@ class VerificadorGeorreferenciamento:
         threading.Thread(target=executar, daemon=True).start()
 
     def _validar_entrada_manual(self) -> bool:
-        """Valida entradas do modo manual."""
+        """Valida entradas do modo manual com lógica condicional para anexos."""
         api_key = self.config_manager.get_api_key()
         if not api_key:
             messagebox.showerror("Erro", "Por favor, configure a API Key primeiro.")
             return False
 
-        if not self.incra_path.get():
-            messagebox.showerror("Erro", "Por favor, selecione o arquivo INCRA.")
-            return False
-
-        if not self.projeto_path.get():
-            messagebox.showerror("Erro", "Por favor, selecione o arquivo Projeto/Planta.")
-            return False
-
         if not self.numero_prenotacao.get():
             messagebox.showerror("Erro", "Por favor, insira o Número de Prenotação.")
             return False
+
+        # Validação condicional para INCRA
+        tem_anexo_incra = bool(self.incra_anexo_path.get())
+        tem_paginas_incra = bool(self.incra_paginas.get().strip())
+        tem_pdf_incra = bool(self.incra_path.get())
+
+        if tem_anexo_incra:
+            # Se tem anexo, o anexo será usado (páginas e PDF base são ignorados)
+            pass
+        else:
+            # Se não tem anexo, deve fornecer PDF base E números de páginas
+            if not tem_pdf_incra:
+                messagebox.showerror(
+                    "Erro - INCRA",
+                    "Por favor, selecione o arquivo PDF do INCRA ou anexe imagens/páginas específicas."
+                )
+                return False
+            if not tem_paginas_incra:
+                messagebox.showerror(
+                    "Erro - INCRA",
+                    "Por favor, forneça os números de páginas do INCRA (ex: 1,3-5) ou anexe imagens/páginas específicas."
+                )
+                return False
+
+        # Validação condicional para PROJETO
+        tem_anexo_projeto = bool(self.projeto_anexo_path.get())
+        tem_paginas_projeto = bool(self.projeto_paginas.get().strip())
+        tem_pdf_projeto = bool(self.projeto_path.get())
+
+        if tem_anexo_projeto:
+            # Se tem anexo, o anexo será usado (páginas e PDF base são ignorados)
+            pass
+        else:
+            # Se não tem anexo, deve fornecer PDF base E números de páginas
+            if not tem_pdf_projeto:
+                messagebox.showerror(
+                    "Erro - PROJETO",
+                    "Por favor, selecione o arquivo PDF do Projeto ou anexe imagens/páginas específicas."
+                )
+                return False
+            if not tem_paginas_projeto:
+                messagebox.showerror(
+                    "Erro - PROJETO",
+                    "Por favor, forneça os números de páginas do Projeto (ex: 1,3-5) ou anexe imagens/páginas específicas."
+                )
+                return False
 
         return True
 
@@ -1333,8 +1536,79 @@ class VerificadorGeorreferenciamento:
 
     # ========== EXTRAÇÃO E COMPARAÇÃO ==========
 
-    def _extrair_pdf_para_excel(self, pdf_path: str, tipo: str = "normal") -> tuple[str, Dict]:
-        """Extrai dados de um PDF memorial para Excel."""
+    def _parsear_numeros_paginas(self, paginas_str: str) -> List[int]:
+        """Converte string de páginas (ex: '1,3-5') em lista de números.
+
+        Args:
+            paginas_str: String com números de páginas separados por vírgula e/ou ranges com hífen
+
+        Returns:
+            Lista de números de página (1-indexed)
+        """
+        paginas = []
+        partes = paginas_str.strip().split(',')
+
+        for parte in partes:
+            parte = parte.strip()
+            if '-' in parte:
+                # Range de páginas (ex: "3-5")
+                inicio, fim = parte.split('-', 1)
+                inicio = int(inicio.strip())
+                fim = int(fim.strip())
+                paginas.extend(range(inicio, fim + 1))
+            else:
+                # Página única
+                paginas.append(int(parte))
+
+        return sorted(set(paginas))  # Remover duplicatas e ordenar
+
+    def _extrair_paginas_especificas(self, pdf_path: str, paginas_str: str, output_dir: Path) -> str:
+        """Extrai páginas específicas de um PDF e cria novo PDF temporário.
+
+        Args:
+            pdf_path: Caminho do PDF original
+            paginas_str: String com números de páginas (ex: "1,3-5")
+            output_dir: Diretório para salvar PDF temporário
+
+        Returns:
+            Caminho do novo PDF com apenas as páginas selecionadas
+        """
+        try:
+            paginas = self._parsear_numeros_paginas(paginas_str)
+
+            # Criar novo PDF com páginas selecionadas
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                writer = PyPDF2.PdfWriter()
+
+                # PyPDF2 usa índice 0-based, converter de 1-based
+                for page_num in paginas:
+                    if page_num < 1 or page_num > len(reader.pages):
+                        raise ValueError(f"Página {page_num} fora do intervalo (1-{len(reader.pages)})")
+                    writer.add_page(reader.pages[page_num - 1])
+
+                # Salvar PDF temporário
+                nome_base = Path(pdf_path).stem
+                temp_pdf_path = output_dir / f"{nome_base}_paginas_{paginas_str.replace(',', '_').replace('-', '_')}.pdf"
+
+                with open(temp_pdf_path, 'wb') as output_file:
+                    writer.write(output_file)
+
+            return str(temp_pdf_path)
+
+        except ValueError as e:
+            raise ValueError(f"Erro ao parsear números de páginas '{paginas_str}': {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"Erro ao extrair páginas específicas: {str(e)}")
+
+    def _extrair_pdf_para_excel(self, pdf_path: str, tipo: str = "normal", paginas: str = None) -> tuple[str, Dict]:
+        """Extrai dados de um PDF memorial para Excel.
+
+        Args:
+            pdf_path: Caminho do arquivo PDF ou imagem
+            tipo: Tipo de extração ("incra" ou "normal")
+            paginas: Números de páginas (ex: "1,3-5") ou None para todas as páginas
+        """
         try:
             api_key = self.config_manager.get_api_key()
             genai.configure(api_key=api_key)
@@ -1344,6 +1618,10 @@ class VerificadorGeorreferenciamento:
 
             if not output_dir.exists():
                 raise RuntimeError(f"Não foi possível criar o diretório: {output_dir}")
+
+            # Se páginas específicas foram fornecidas, extrair essas páginas primeiro
+            if paginas:
+                pdf_path = self._extrair_paginas_especificas(pdf_path, paginas, output_dir)
 
             nome_base = Path(pdf_path).stem
             excel_path = output_dir / f"{nome_base}_extraido.xlsx"
