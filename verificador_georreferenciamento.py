@@ -1279,21 +1279,15 @@ class VerificadorGeorreferenciamento:
         )
         self.progress_status_label.pack()
 
-        # Botão de fechar (desabilitado durante processamento)
-        self.progress_close_btn = tk.Button(
+        # Label informativo
+        info_label = tk.Label(
             main_frame,
-            text="❌  Fechar",
-            command=self._fechar_janela_progresso,
-            font=('Inter', 10, 'bold'),
-            bg=self.colors['text_light'],
-            fg=self.colors['text_dark'],
-            relief=tk.FLAT,
-            padx=20,
-            pady=8,
-            cursor='hand2',
-            state='disabled'
+            text="⏱️  Esta janela fechará automaticamente ao concluir",
+            font=('Inter', 8, 'italic'),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
         )
-        self.progress_close_btn.pack(pady=(15, 0))
+        info_label.pack(pady=(15, 0))
 
         # Mensagem inicial
         self.progress_text.insert(tk.END, "═" * 60 + "\n")
@@ -1316,15 +1310,15 @@ class VerificadorGeorreferenciamento:
             except:
                 pass
 
-    def _habilitar_fechar_progresso(self):
-        """Habilita o botão de fechar na janela de progresso."""
-        if self.progress_window and hasattr(self, 'progress_close_btn'):
+    def _fechar_progresso_automatico(self, delay=2000):
+        """Fecha a janela de progresso automaticamente após um delay.
+
+        Args:
+            delay: Tempo em milissegundos antes de fechar (padrão: 2000ms = 2 segundos)
+        """
+        if self.progress_window:
             try:
-                self.progress_close_btn.config(
-                    state='normal',
-                    bg=self.colors['danger'],
-                    fg='white'
-                )
+                self.root.after(delay, self._fechar_janela_progresso)
             except:
                 pass
 
@@ -1377,8 +1371,8 @@ class VerificadorGeorreferenciamento:
                 self._atualizar_status("🎉  PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
                 self._atualizar_status("═" * 60 + "\n")
 
-                # Habilitar botão de fechar na janela de progresso
-                self._habilitar_fechar_progresso()
+                # Fechar janela de progresso automaticamente após 2 segundos
+                self._fechar_progresso_automatico()
 
             except Exception as e:
                 self._atualizar_status(f"❌ Erro: {str(e)}")
@@ -1386,8 +1380,8 @@ class VerificadorGeorreferenciamento:
                 self._atualizar_status("❌  PROCESSAMENTO FINALIZADO COM ERRO")
                 self._atualizar_status("═" * 60 + "\n")
 
-                # Habilitar botão de fechar na janela de progresso
-                self._habilitar_fechar_progresso()
+                # Fechar janela de progresso automaticamente após 3 segundos
+                self._fechar_progresso_automatico(delay=3000)
 
                 messagebox.showerror("Erro", f"Erro ao processar documentos:\n\n{str(e)}")
             finally:
@@ -1522,8 +1516,8 @@ class VerificadorGeorreferenciamento:
                 self._atualizar_status("🎉  PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
                 self._atualizar_status("═" * 60 + "\n")
 
-                # Habilitar botão de fechar na janela de progresso
-                self._habilitar_fechar_progresso()
+                # Fechar janela de progresso automaticamente após 2 segundos
+                self._fechar_progresso_automatico()
 
             except Exception as e:
                 self._atualizar_status(f"❌ Erro: {str(e)}")
@@ -1531,8 +1525,8 @@ class VerificadorGeorreferenciamento:
                 self._atualizar_status("❌  PROCESSAMENTO FINALIZADO COM ERRO")
                 self._atualizar_status("═" * 60 + "\n")
 
-                # Habilitar botão de fechar na janela de progresso
-                self._habilitar_fechar_progresso()
+                # Fechar janela de progresso automaticamente após 3 segundos (para dar tempo de ler o erro)
+                self._fechar_progresso_automatico(delay=3000)
 
                 messagebox.showerror("Erro", f"Erro no modo automático:\n\n{str(e)}")
                 self._habilitar_botoes()
@@ -1920,117 +1914,207 @@ class VerificadorGeorreferenciamento:
             box-sizing: border-box;
         }
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 30px;
+            line-height: 1.6;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: #ffffff;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 25px;
+            margin-bottom: 35px;
         }
         h1 {
-            color: #2c3e50;
-            text-align: center;
+            color: #1a1a1a;
             margin-bottom: 10px;
-            font-size: 32px;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
         }
         .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 30px;
+            color: #666;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-section {
+            background: #fafafa;
+            border-left: 4px solid #333;
+            padding: 20px 25px;
+            margin-bottom: 35px;
+        }
+        .info-section p {
+            margin: 8px 0;
+            color: #333;
             font-size: 14px;
         }
-        .info-box {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+        .info-section strong {
+            color: #000;
+            font-weight: 600;
         }
-        .info-box strong {
-            color: #2c3e50;
+        .section-title {
+            color: #1a1a1a;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 45px 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #ddd;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+        }
+        thead {
+            background: #333;
+            color: #fff;
         }
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
+            padding: 14px 12px;
             text-align: left;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody tr {
+            border-bottom: 1px solid #e8e8e8;
+        }
+        tbody tr:last-child {
+            border-bottom: none;
         }
         td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ecf0f1;
-            font-size: 13px;
+            padding: 12px;
+            color: #333;
         }
-        tr:hover {
-            background-color: #f8f9fa;
+        tbody tr:hover {
+            background-color: #f9f9f9;
         }
         .identico {
+            background-color: #e8f5e9 !important;
+            border-left: 3px solid #4caf50;
+        }
+        .identico:hover {
             background-color: #d4edda !important;
-            border-left: 4px solid #28a745;
         }
         .diferente {
+            background-color: #ffebee !important;
+            border-left: 3px solid #f44336;
+        }
+        .diferente:hover {
             background-color: #f8d7da !important;
-            border-left: 4px solid #dc3545;
+        }
+        .diferente td {
             font-weight: 600;
         }
-        .resumo {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-top: 30px;
+        .resumo-section {
+            background: #fafafa;
+            border: 2px solid #333;
+            padding: 30px;
+            margin-top: 45px;
+            border-radius: 4px;
         }
-        .resumo h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
+        .resumo-section h2 {
+            color: #1a1a1a;
+            margin-bottom: 25px;
+            font-size: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .resumo h4 {
-            margin-top: 15px;
-            margin-bottom: 10px;
-            font-size: 18px;
+        .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
         }
-        .resumo p {
-            margin: 5px 0;
+        .resumo-card {
+            background: #fff;
+            border-left: 4px solid #666;
+            padding: 18px;
+        }
+        .resumo-card h4 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .resumo-card p {
+            margin: 6px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .resumo-card strong {
+            color: #000;
+            font-weight: 600;
             font-size: 16px;
         }
-        .section-title {
-            color: #2c3e50;
-            margin: 40px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #667eea;
-            font-size: 24px;
+        .resumo-total {
+            background: #333;
+            color: #fff;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 4px;
         }
-        .rodape {
+        .resumo-total h4 {
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .resumo-total p {
+            color: #fff;
+            font-size: 14px;
+        }
+        .resumo-total strong {
+            color: #fff;
+            font-size: 16px;
+        }
+        .footer {
             text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #ecf0f1;
-            color: #7f8c8d;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 2px solid #ddd;
+            color: #999;
             font-size: 12px;
+        }
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📋 RELATÓRIO DE CONFERÊNCIA INCRA</h1>
-        <p class="subtitle">Sistema Profissional de Análise e Verificação v4.0</p>
+        <div class="header">
+            <h1>RELATÓRIO DE CONFERÊNCIA INCRA</h1>
+            <p class="subtitle">Sistema de Análise e Verificação Georreferenciamento</p>
+        </div>
 """)
 
         html.append(f"""
-        <div class="info-box">
-            <p><strong>📅 Data:</strong> {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
-            <p><strong>📋 Nº Prenotação:</strong> {self.numero_prenotacao.get()}</p>
+        <div class="info-section">
+            <p><strong>Data:</strong> {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
+            <p><strong>Nº Prenotação:</strong> {self.numero_prenotacao.get()}</p>
         </div>
 """)
 
@@ -2049,10 +2133,10 @@ class VerificadorGeorreferenciamento:
         diferencas_segmento = 0
 
         # VÉRTICE
-        html.append('<h2 class="section-title">📐 COMPARAÇÃO: VÉRTICE</h2>')
+        html.append('<h2 class="section-title">Comparação de Vértices</h2>')
         html.append('<table>')
         html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>PROJETO</th><th>Status</th>')
+        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
         html.append('</tr></thead><tbody>')
 
         max_rows = max(len(dados_incra), len(dados_projeto))
@@ -2097,10 +2181,10 @@ class VerificadorGeorreferenciamento:
         html.append('</tbody></table>')
 
         # SEGMENTO VANTE
-        html.append('<h2 class="section-title">🔄 COMPARAÇÃO: SEGMENTO VANTE</h2>')
+        html.append('<h2 class="section-title">Comparação de Segmentos Vante</h2>')
         html.append('<table>')
         html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>PROJETO</th><th>Status</th>')
+        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
         html.append('</tr></thead><tbody>')
 
         for i in range(1, max_rows):
@@ -2143,20 +2227,29 @@ class VerificadorGeorreferenciamento:
         diferencas_total = diferencas_vertice + diferencas_segmento
 
         html.append(f"""
-        <div class="resumo">
-            <h2>📊 RESUMO DA COMPARAÇÃO</h2>
-            <h4>📍 VÉRTICE:</h4>
-            <p>✅ Idênticos: <strong>{identicos_vertice}</strong></p>
-            <p>❌ Diferentes: <strong>{diferencas_vertice}</strong></p>
-            <h4>🔄 SEGMENTO VANTE:</h4>
-            <p>✅ Idênticos: <strong>{identicos_segmento}</strong></p>
-            <p>❌ Diferentes: <strong>{diferencas_segmento}</strong></p>
-            <h4>🎯 TOTAL GERAL:</h4>
-            <p>✅ Total idênticos: <strong>{identicos_total}</strong></p>
-            <p>❌ Total diferentes: <strong>{diferencas_total}</strong></p>
+        <div class="resumo-section">
+            <h2>Resumo da Comparação</h2>
+            <div class="resumo-grid">
+                <div class="resumo-card">
+                    <h4>Vértices</h4>
+                    <p>Idênticos: <strong>{identicos_vertice}</strong></p>
+                    <p>Diferentes: <strong>{diferencas_vertice}</strong></p>
+                </div>
+                <div class="resumo-card">
+                    <h4>Segmentos Vante</h4>
+                    <p>Idênticos: <strong>{identicos_segmento}</strong></p>
+                    <p>Diferentes: <strong>{diferencas_segmento}</strong></p>
+                </div>
+            </div>
+            <div class="resumo-total">
+                <h4>Total Geral</h4>
+                <p>Total de campos idênticos: <strong>{identicos_total}</strong></p>
+                <p>Total de campos diferentes: <strong>{diferencas_total}</strong></p>
+            </div>
         </div>
-        <div class="rodape">
+        <div class="footer">
             <p>Relatório gerado automaticamente pelo Sistema de Verificação INCRA v4.0</p>
+            <p>{datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</p>
         </div>
     </div>
 </body>
