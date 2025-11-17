@@ -22,6 +22,8 @@ import webbrowser
 import math
 from datetime import datetime
 import configparser
+import subprocess
+import platform
 
 try:
     from pdf2image import convert_from_path
@@ -38,6 +40,22 @@ try:
 except ImportError as e:
     print(f"❌ Erro: Biblioteca necessária não encontrada: {e}")
     print("\nInstale as dependências com:")
+
+# Configurar para esconder janelas do CMD no Windows
+if platform.system() == 'Windows':
+    # Monkey patch para pdf2image não mostrar janelas do CMD
+    original_popen = subprocess.Popen
+
+    def no_console_popen(*args, **kwargs):
+        """Wrapper do Popen que esconde janelas do console no Windows."""
+        if 'startupinfo' not in kwargs:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            kwargs['startupinfo'] = startupinfo
+        return original_popen(*args, **kwargs)
+
+    subprocess.Popen = no_console_popen
     print("pip install pdf2image Pillow google-generativeai openpyxl PyPDF2")
     print("\nNota: Também é necessário ter o 'poppler-utils' instalado no sistema.")
     sys.exit(1)
@@ -137,6 +155,17 @@ class VerificadorGeorreferenciamento:
 
         # Configurar evento de fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self._ao_fechar_programa)
+
+    @staticmethod
+    def _get_startup_info():
+        """Cria configuração para esconder janelas do CMD no Windows."""
+        if platform.system() == 'Windows':
+            import subprocess
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            return startupinfo
+        return None
 
     def _configurar_estilo(self):
         """Configura tema moderno e profissional com cores vibrantes."""

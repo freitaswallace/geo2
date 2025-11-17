@@ -17,6 +17,8 @@ import shutil
 import math
 from pathlib import Path
 from typing import Optional, Dict, List
+import subprocess
+import platform
 
 # Importações das bibliotecas necessárias
 try:
@@ -33,6 +35,22 @@ except ImportError as e:
     print("\n📦 Instale as dependências com:")
     print("pip install google-generativeai openpyxl python-docx pillow pdf2image --break-system-packages")
     sys.exit(1)
+
+# Configurar para esconder janelas do CMD no Windows
+if platform.system() == 'Windows':
+    # Monkey patch para pdf2image não mostrar janelas do CMD
+    original_popen = subprocess.Popen
+
+    def no_console_popen(*args, **kwargs):
+        """Wrapper do Popen que esconde janelas do console no Windows."""
+        if 'startupinfo' not in kwargs:
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            kwargs['startupinfo'] = startupinfo
+        return original_popen(*args, **kwargs)
+
+    subprocess.Popen = no_console_popen
 
 
 # ============================================================================
