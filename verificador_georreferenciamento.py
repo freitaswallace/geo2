@@ -86,6 +86,15 @@ class VerificadorGeorreferenciamento:
         self.root.title("✨ Verificador INCRA Pro v4.0")
         self.root.geometry("1450x980")
 
+        # Maximizar janela ao abrir
+        try:
+            self.root.state('zoomed')  # Windows/Linux
+        except:
+            try:
+                self.root.attributes('-zoomed', True)  # Alternativa
+            except:
+                pass  # Se não funcionar, mantém tamanho padrão
+
         # Gerenciador de configurações
         self.config_manager = ConfigManager()
 
@@ -112,6 +121,10 @@ class VerificadorGeorreferenciamento:
         self.pdf_extraido_projeto: Optional[str] = None
         self.preview_incra_image: Optional[Image.Image] = None
         self.preview_projeto_image: Optional[Image.Image] = None
+
+        # Janela de progresso em tempo real
+        self.progress_window: Optional[tk.Toplevel] = None
+        self.progress_text: Optional[scrolledtext.ScrolledText] = None
 
         # Configurar estilo moderno
         self._configurar_estilo()
@@ -1166,7 +1179,7 @@ class VerificadorGeorreferenciamento:
                 )
 
     def _atualizar_status(self, mensagem: str):
-        """Atualiza a barra de status."""
+        """Atualiza a barra de status e a janela de progresso."""
         # Detectar tipo de mensagem e ajustar cor
         if "✅" in mensagem or "sucesso" in mensagem.lower():
             cor = self.colors['success']
@@ -1179,6 +1192,141 @@ class VerificadorGeorreferenciamento:
 
         self.status_label.config(text=mensagem, fg=cor)
         self.root.update_idletasks()
+
+        # Atualizar também a janela de progresso se estiver aberta
+        if self.progress_window and self.progress_text:
+            try:
+                self.progress_text.insert(tk.END, f"{mensagem}\n")
+                self.progress_text.see(tk.END)
+                self.progress_window.update_idletasks()
+            except:
+                pass
+
+    def _mostrar_janela_progresso(self):
+        """Cria e exibe a janela de progresso em tempo real."""
+        if self.progress_window:
+            try:
+                self.progress_window.destroy()
+            except:
+                pass
+
+        # Criar janela toplevel
+        self.progress_window = tk.Toplevel(self.root)
+        self.progress_window.title("🔄 Progresso em Tempo Real")
+        self.progress_window.geometry("700x500")
+
+        # Centralizar janela
+        self.progress_window.transient(self.root)
+
+        # Frame principal
+        main_frame = tk.Frame(self.progress_window, bg=self.colors['bg_light'], padx=20, pady=20)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Título
+        title_label = tk.Label(
+            main_frame,
+            text="🔄  Processamento em Andamento",
+            font=('Inter', 16, 'bold'),
+            fg=self.colors['primary'],
+            bg=self.colors['bg_light']
+        )
+        title_label.pack(pady=(0, 15))
+
+        # Subtítulo
+        subtitle_label = tk.Label(
+            main_frame,
+            text="Acompanhe cada etapa do processo abaixo:",
+            font=('Inter', 10),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        )
+        subtitle_label.pack(pady=(0, 20))
+
+        # ScrolledText para mostrar progresso
+        self.progress_text = scrolledtext.ScrolledText(
+            main_frame,
+            font=('Consolas', 10),
+            bg='#1E293B',
+            fg='#F8FAFC',
+            insertbackground='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=15,
+            wrap=tk.WORD
+        )
+        self.progress_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+
+        # Configurar tags para colorir mensagens
+        self.progress_text.tag_config('success', foreground='#10B981')
+        self.progress_text.tag_config('error', foreground='#EF4444')
+        self.progress_text.tag_config('info', foreground='#3B82F6')
+        self.progress_text.tag_config('warning', foreground='#F59E0B')
+
+        # Barra de progresso animada
+        progress_frame = tk.Frame(main_frame, bg=self.colors['bg_light'], height=8)
+        progress_frame.pack(fill=tk.X, pady=(0, 10))
+
+        self.progress_bar = tk.Canvas(progress_frame, height=8, bg=self.colors['border'], highlightthickness=0)
+        self.progress_bar.pack(fill=tk.X)
+
+        # Label de status
+        self.progress_status_label = tk.Label(
+            main_frame,
+            text="Iniciando...",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        )
+        self.progress_status_label.pack()
+
+        # Botão de fechar (desabilitado durante processamento)
+        self.progress_close_btn = tk.Button(
+            main_frame,
+            text="❌  Fechar",
+            command=self._fechar_janela_progresso,
+            font=('Inter', 10, 'bold'),
+            bg=self.colors['text_light'],
+            fg=self.colors['text_dark'],
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2',
+            state='disabled'
+        )
+        self.progress_close_btn.pack(pady=(15, 0))
+
+        # Mensagem inicial
+        self.progress_text.insert(tk.END, "═" * 60 + "\n")
+        self.progress_text.insert(tk.END, "🚀  INICIANDO PROCESSAMENTO\n")
+        self.progress_text.insert(tk.END, "═" * 60 + "\n\n")
+
+        # Posicionar no centro da tela
+        self.progress_window.update_idletasks()
+        x = (self.progress_window.winfo_screenwidth() // 2) - (700 // 2)
+        y = (self.progress_window.winfo_screenheight() // 2) - (500 // 2)
+        self.progress_window.geometry(f"700x500+{x}+{y}")
+
+    def _fechar_janela_progresso(self):
+        """Fecha a janela de progresso."""
+        if self.progress_window:
+            try:
+                self.progress_window.destroy()
+                self.progress_window = None
+                self.progress_text = None
+            except:
+                pass
+
+    def _habilitar_fechar_progresso(self):
+        """Habilita o botão de fechar na janela de progresso."""
+        if self.progress_window and hasattr(self, 'progress_close_btn'):
+            try:
+                self.progress_close_btn.config(
+                    state='normal',
+                    bg=self.colors['danger'],
+                    fg='white'
+                )
+            except:
+                pass
 
     def _desabilitar_botoes(self):
         """Desabilita botões durante o processamento."""
@@ -1194,6 +1342,9 @@ class VerificadorGeorreferenciamento:
         """Executa comparação no modo manual."""
         if not self._validar_entrada_manual():
             return
+
+        # Mostrar janela de progresso
+        self._mostrar_janela_progresso()
 
         def executar():
             try:
@@ -1222,9 +1373,22 @@ class VerificadorGeorreferenciamento:
                 self._mostrar_resumo_no_texto()
 
                 self._atualizar_status("✅ Comparação concluída com sucesso!")
+                self._atualizar_status("\n" + "═" * 60)
+                self._atualizar_status("🎉  PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
+                self._atualizar_status("═" * 60 + "\n")
+
+                # Habilitar botão de fechar na janela de progresso
+                self._habilitar_fechar_progresso()
 
             except Exception as e:
                 self._atualizar_status(f"❌ Erro: {str(e)}")
+                self._atualizar_status("\n" + "═" * 60)
+                self._atualizar_status("❌  PROCESSAMENTO FINALIZADO COM ERRO")
+                self._atualizar_status("═" * 60 + "\n")
+
+                # Habilitar botão de fechar na janela de progresso
+                self._habilitar_fechar_progresso()
+
                 messagebox.showerror("Erro", f"Erro ao processar documentos:\n\n{str(e)}")
             finally:
                 self._habilitar_botoes()
@@ -1259,6 +1423,9 @@ class VerificadorGeorreferenciamento:
         """Inicia o processo automático."""
         if not self._validar_entrada_automatico():
             return
+
+        # Mostrar janela de progresso
+        self._mostrar_janela_progresso()
 
         def executar():
             try:
@@ -1351,9 +1518,22 @@ class VerificadorGeorreferenciamento:
                 self.preview_frame.pack(fill=tk.BOTH, expand=True, pady=20)
 
                 self._atualizar_status("✅ Documentos extraídos! Verifique as prévias.")
+                self._atualizar_status("\n" + "═" * 60)
+                self._atualizar_status("🎉  PROCESSAMENTO CONCLUÍDO COM SUCESSO!")
+                self._atualizar_status("═" * 60 + "\n")
+
+                # Habilitar botão de fechar na janela de progresso
+                self._habilitar_fechar_progresso()
 
             except Exception as e:
                 self._atualizar_status(f"❌ Erro: {str(e)}")
+                self._atualizar_status("\n" + "═" * 60)
+                self._atualizar_status("❌  PROCESSAMENTO FINALIZADO COM ERRO")
+                self._atualizar_status("═" * 60 + "\n")
+
+                # Habilitar botão de fechar na janela de progresso
+                self._habilitar_fechar_progresso()
+
                 messagebox.showerror("Erro", f"Erro no modo automático:\n\n{str(e)}")
                 self._habilitar_botoes()
 
