@@ -95,6 +95,12 @@ class VerificadorGeorreferenciamento:
         self.numero_prenotacao = tk.StringVar()
         self.modo_atual = tk.StringVar(value="automatico")
 
+        # Variáveis para Sub-modo Por Páginas (Modo Automático)
+        self.incra_paginas = tk.StringVar()  # Números de páginas do INCRA (ex: "1,2,3")
+        self.projeto_paginas = tk.StringVar()  # Números de páginas do PROJETO (ex: "4,5")
+        self.incra_anexo_path = tk.StringVar()  # Caminho do anexo manual do INCRA
+        self.projeto_anexo_path = tk.StringVar()  # Caminho do anexo manual do PROJETO
+
         # Variáveis para armazenar dados extraídos
         self.incra_excel_path: Optional[str] = None
         self.projeto_excel_path: Optional[str] = None
@@ -591,6 +597,194 @@ class VerificadorGeorreferenciamento:
             bg=self.colors['bg_card']
         ).pack(pady=(0, 25))
 
+        # ===== SUB-MODO POR PÁGINAS =====
+        submodo_frame = tk.Frame(content, bg=self.colors['bg_card'])
+        submodo_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
+
+        tk.Label(
+            submodo_frame,
+            text="📝  Sub-modo Por Páginas (Opcional)",
+            font=('Inter', 11, 'bold'),
+            fg=self.colors['primary'],
+            bg=self.colors['bg_card']
+        ).pack(pady=(0, 10))
+
+        tk.Label(
+            submodo_frame,
+            text="Deixe em branco para usar detecção automática por IA, ou especifique páginas/anexe manualmente",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_card']
+        ).pack(pady=(0, 20))
+
+        # Container para INCRA e PROJETO lado a lado
+        docs_container = tk.Frame(submodo_frame, bg=self.colors['bg_card'])
+        docs_container.pack(fill=tk.BOTH, expand=True)
+
+        # ===== INCRA =====
+        incra_submodo_frame = tk.Frame(docs_container, bg=self.colors['bg_light'],
+                                        highlightbackground=self.colors['border'],
+                                        highlightthickness=1)
+        incra_submodo_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+
+        incra_inner = tk.Frame(incra_submodo_frame, bg=self.colors['bg_light'])
+        incra_inner.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+
+        tk.Label(
+            incra_inner,
+            text="📄  Memorial INCRA",
+            font=('Inter', 10, 'bold'),
+            fg=self.colors['text_dark'],
+            bg=self.colors['bg_light']
+        ).pack(pady=(0, 10))
+
+        # Input de páginas do INCRA
+        tk.Label(
+            incra_inner,
+            text="Números das páginas (ex: 1,2,3):",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(anchor=tk.W, pady=(5, 2))
+
+        incra_paginas_entry = tk.Entry(
+            incra_inner,
+            textvariable=self.incra_paginas,
+            font=('Inter', 10),
+            width=20,
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            insertbackground=self.colors['primary'],
+            borderwidth=1
+        )
+        incra_paginas_entry.pack(fill=tk.X, pady=(0, 10), ipady=4)
+
+        # Separador OU
+        tk.Label(
+            incra_inner,
+            text="━━━━━━ OU ━━━━━━",
+            font=('Inter', 8),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(pady=10)
+
+        # Botão de anexo manual do INCRA
+        tk.Label(
+            incra_inner,
+            text="Anexar arquivo manualmente:",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(anchor=tk.W, pady=(5, 2))
+
+        incra_anexo_btn = tk.Button(
+            incra_inner,
+            text="📁 Selecionar PDF",
+            command=lambda: self._selecionar_arquivo_anexo(self.incra_anexo_path, "INCRA"),
+            font=('Inter', 9),
+            bg=self.colors['secondary'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2'
+        )
+        incra_anexo_btn.pack(fill=tk.X, pady=(0, 5))
+
+        # Label para mostrar arquivo selecionado
+        self.incra_anexo_label = tk.Label(
+            incra_inner,
+            text="Nenhum arquivo selecionado",
+            font=('Inter', 8),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light'],
+            wraplength=200
+        )
+        self.incra_anexo_label.pack()
+
+        # ===== PROJETO =====
+        projeto_submodo_frame = tk.Frame(docs_container, bg=self.colors['bg_light'],
+                                          highlightbackground=self.colors['border'],
+                                          highlightthickness=1)
+        projeto_submodo_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0))
+
+        projeto_inner = tk.Frame(projeto_submodo_frame, bg=self.colors['bg_light'])
+        projeto_inner.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+
+        tk.Label(
+            projeto_inner,
+            text="📐  Planta/Projeto",
+            font=('Inter', 10, 'bold'),
+            fg=self.colors['text_dark'],
+            bg=self.colors['bg_light']
+        ).pack(pady=(0, 10))
+
+        # Input de páginas do PROJETO
+        tk.Label(
+            projeto_inner,
+            text="Números das páginas (ex: 4,5,6):",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(anchor=tk.W, pady=(5, 2))
+
+        projeto_paginas_entry = tk.Entry(
+            projeto_inner,
+            textvariable=self.projeto_paginas,
+            font=('Inter', 10),
+            width=20,
+            relief=tk.SOLID,
+            bg='white',
+            fg=self.colors['text_dark'],
+            insertbackground=self.colors['primary'],
+            borderwidth=1
+        )
+        projeto_paginas_entry.pack(fill=tk.X, pady=(0, 10), ipady=4)
+
+        # Separador OU
+        tk.Label(
+            projeto_inner,
+            text="━━━━━━ OU ━━━━━━",
+            font=('Inter', 8),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(pady=10)
+
+        # Botão de anexo manual do PROJETO
+        tk.Label(
+            projeto_inner,
+            text="Anexar arquivo manualmente:",
+            font=('Inter', 9),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light']
+        ).pack(anchor=tk.W, pady=(5, 2))
+
+        projeto_anexo_btn = tk.Button(
+            projeto_inner,
+            text="📁 Selecionar PDF",
+            command=lambda: self._selecionar_arquivo_anexo(self.projeto_anexo_path, "PROJETO"),
+            font=('Inter', 9),
+            bg=self.colors['secondary'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor='hand2'
+        )
+        projeto_anexo_btn.pack(fill=tk.X, pady=(0, 5))
+
+        # Label para mostrar arquivo selecionado
+        self.projeto_anexo_label = tk.Label(
+            projeto_inner,
+            text="Nenhum arquivo selecionado",
+            font=('Inter', 8),
+            fg=self.colors['text_medium'],
+            bg=self.colors['bg_light'],
+            wraplength=200
+        )
+        self.projeto_anexo_label.pack()
+
         # Botão grande de iniciar
         self.btn_iniciar_automatico = tk.Button(
             content,
@@ -950,6 +1144,27 @@ class VerificadorGeorreferenciamento:
         if filename:
             variavel.set(filename)
 
+    def _selecionar_arquivo_anexo(self, variavel, tipo):
+        """Abre diálogo para selecionar arquivo PDF para anexo manual e atualiza label."""
+        filename = filedialog.askopenfilename(
+            title=f"Selecionar arquivo {tipo}",
+            filetypes=[("PDF Files", "*.pdf"), ("All Files", "*.*")]
+        )
+        if filename:
+            variavel.set(filename)
+            # Atualizar label correspondente
+            nome_arquivo = Path(filename).name
+            if tipo == "INCRA":
+                self.incra_anexo_label.config(
+                    text=f"✓ {nome_arquivo}",
+                    fg=self.colors['success']
+                )
+            elif tipo == "PROJETO":
+                self.projeto_anexo_label.config(
+                    text=f"✓ {nome_arquivo}",
+                    fg=self.colors['success']
+                )
+
     def _atualizar_status(self, mensagem: str):
         """Atualiza a barra de status."""
         # Detectar tipo de mensagem e ajustar cor
@@ -1049,33 +1264,90 @@ class VerificadorGeorreferenciamento:
             try:
                 self._desabilitar_botoes()
 
-                # 1. Buscar arquivo TIFF
-                self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
-                tiff_path = self._buscar_arquivo_tiff()
+                # 1. Verificar se precisa buscar arquivo TIFF
+                # (só busca se pelo menos um dos documentos não tiver anexo manual)
+                pdf_path = None
+                precisa_buscar = (
+                    (not self.incra_anexo_path.get() and not self.incra_paginas.get()) or
+                    (not self.projeto_anexo_path.get() and not self.projeto_paginas.get()) or
+                    self.incra_paginas.get() or
+                    self.projeto_paginas.get()
+                )
 
-                if not tiff_path:
-                    raise Exception("Arquivo TIFF não encontrado na rede.")
+                if precisa_buscar:
+                    self._atualizar_status("🔍 Buscando arquivo TIFF na rede...")
+                    tiff_path = self._buscar_arquivo_tiff()
 
-                # 2. Copiar e converter para PDF
-                self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
-                pdf_path = self._converter_tiff_para_pdf(tiff_path)
+                    if not tiff_path:
+                        raise Exception("Arquivo TIFF não encontrado na rede.")
 
-                # 3. Extrair documentos do PDF
-                self._atualizar_status("📄 Extraindo Memorial INCRA...")
-                self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+                    # 2. Copiar e converter para PDF
+                    self._atualizar_status("📋 Copiando e convertendo TIFF para PDF...")
+                    pdf_path = self._converter_tiff_para_pdf(tiff_path)
 
-                self._atualizar_status("📐 Extraindo Planta/Projeto...")
-                self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+                # 3. Processar Memorial INCRA (com lógica de ignorar inputs vazios)
+                self._atualizar_status("📄 Processando Memorial INCRA...")
 
-                # 4. Salvar backups
+                if self.incra_paginas.get().strip():
+                    # Usuário especificou páginas manualmente
+                    self._atualizar_status(f"📄 Extraindo páginas especificadas do INCRA: {self.incra_paginas.get()}")
+                    if not pdf_path:
+                        raise Exception("Número de prenotação necessário para buscar páginas específicas do INCRA")
+                    self.pdf_extraido_incra = self._extrair_paginas_especificas(
+                        pdf_path, self.incra_paginas.get(), 'incra'
+                    )
+                elif self.incra_anexo_path.get().strip():
+                    # Usuário anexou arquivo manualmente
+                    self._atualizar_status("📄 Usando anexo manual do INCRA")
+                    # Copiar anexo para pasta temporária
+                    output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    dest = output_dir / "memorial_incra_extraido.pdf"
+                    shutil.copy2(self.incra_anexo_path.get(), dest)
+                    self.pdf_extraido_incra = str(dest)
+                else:
+                    # Usar detecção automática por IA (comportamento original)
+                    self._atualizar_status("📄 Usando detecção automática por IA para INCRA")
+                    if not pdf_path:
+                        raise Exception("Número de prenotação necessário para detecção automática do INCRA")
+                    self.pdf_extraido_incra = self._extrair_memorial_incra_do_pdf(pdf_path)
+
+                # 4. Processar Planta/Projeto (com lógica de ignorar inputs vazios)
+                self._atualizar_status("📐 Processando Planta/Projeto...")
+
+                if self.projeto_paginas.get().strip():
+                    # Usuário especificou páginas manualmente
+                    self._atualizar_status(f"📐 Extraindo páginas especificadas do PROJETO: {self.projeto_paginas.get()}")
+                    if not pdf_path:
+                        raise Exception("Número de prenotação necessário para buscar páginas específicas do PROJETO")
+                    self.pdf_extraido_projeto = self._extrair_paginas_especificas(
+                        pdf_path, self.projeto_paginas.get(), 'projeto'
+                    )
+                elif self.projeto_anexo_path.get().strip():
+                    # Usuário anexou arquivo manualmente
+                    self._atualizar_status("📐 Usando anexo manual do PROJETO")
+                    # Copiar anexo para pasta temporária
+                    output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    dest = output_dir / "projeto_extraido.pdf"
+                    shutil.copy2(self.projeto_anexo_path.get(), dest)
+                    self.pdf_extraido_projeto = str(dest)
+                else:
+                    # Usar detecção automática por IA (comportamento original)
+                    self._atualizar_status("📐 Usando detecção automática por IA para PROJETO")
+                    if not pdf_path:
+                        raise Exception("Número de prenotação necessário para detecção automática do PROJETO")
+                    self.pdf_extraido_projeto = self._extrair_projeto_do_pdf(pdf_path)
+
+                # 5. Salvar backups
                 self._atualizar_status("💾 Salvando backups...")
                 self._salvar_backups_pdfs()
 
-                # 5. Gerar previews
+                # 6. Gerar previews
                 self._atualizar_status("👁️ Gerando prévias...")
                 self._gerar_previews()
 
-                # 6. Mostrar frame de preview
+                # 7. Mostrar frame de preview
                 self.preview_frame.pack(fill=tk.BOTH, expand=True, pady=20)
 
                 self._atualizar_status("✅ Documentos extraídos! Verifique as prévias.")
@@ -1155,6 +1427,57 @@ class VerificadorGeorreferenciamento:
             )
 
         return str(pdf_path)
+
+    def _extrair_paginas_especificas(self, pdf_path: str, paginas_str: str, tipo: str) -> str:
+        """Extrai páginas específicas de um PDF baseado em string (ex: '1,2,3').
+
+        Args:
+            pdf_path: Caminho do PDF completo
+            paginas_str: String com números de páginas separados por vírgula (ex: '1,2,3')
+            tipo: 'incra' ou 'projeto' para nomear o arquivo de saída
+
+        Returns:
+            Caminho do PDF com as páginas extraídas
+        """
+        output_dir = Path.home() / "Downloads" / "conferencia_geo_temp"
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        if tipo == 'incra':
+            output_pdf = output_dir / "memorial_incra_extraido.pdf"
+        else:
+            output_pdf = output_dir / "projeto_extraido.pdf"
+
+        # Parsear string de páginas
+        try:
+            # Remove espaços e split por vírgula
+            paginas_list = [int(p.strip()) for p in paginas_str.split(',') if p.strip()]
+
+            # Converter para índice 0-based (usuário digita 1-based)
+            paginas_indices = [p - 1 for p in paginas_list if p > 0]
+
+            if not paginas_indices:
+                raise ValueError("Nenhuma página válida especificada")
+
+            # Extrair páginas
+            with open(pdf_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                writer = PyPDF2.PdfWriter()
+
+                total_paginas = len(reader.pages)
+
+                for page_num in paginas_indices:
+                    if page_num < total_paginas:
+                        writer.add_page(reader.pages[page_num])
+                    else:
+                        self._atualizar_status(f"⚠️ Página {page_num + 1} não existe no PDF (total: {total_paginas})")
+
+                with open(output_pdf, 'wb') as output_file:
+                    writer.write(output_file)
+
+            return str(output_pdf)
+
+        except ValueError as e:
+            raise ValueError(f"Formato inválido para números de páginas: {str(e)}")
 
     def _extrair_memorial_incra_do_pdf(self, pdf_path: str) -> str:
         """Extrai páginas do Memorial INCRA do PDF."""
