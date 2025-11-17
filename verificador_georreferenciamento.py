@@ -135,6 +135,9 @@ class VerificadorGeorreferenciamento:
         # Carregar API key salva
         self._carregar_api_key()
 
+        # Configurar evento de fechamento da janela
+        self.root.protocol("WM_DELETE_WINDOW", self._ao_fechar_programa)
+
     def _configurar_estilo(self):
         """Configura tema moderno e profissional com cores vibrantes."""
         style = ttk.Style()
@@ -474,6 +477,7 @@ class VerificadorGeorreferenciamento:
         status_frame = tk.Frame(main_frame, bg=self.colors['bg_card'], height=40)
         status_frame.pack(fill=tk.X, pady=(15, 25), padx=25)
 
+        # Label de status à esquerda
         self.status_label = tk.Label(
             status_frame,
             text="✨ Pronto para iniciar",
@@ -482,7 +486,24 @@ class VerificadorGeorreferenciamento:
             bg=self.colors['bg_card'],
             anchor=tk.W
         )
-        self.status_label.pack(fill=tk.X, padx=15, pady=10)
+        self.status_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=15, pady=10)
+
+        # Botão "Limpar Tudo" à direita
+        self.btn_limpar_tudo = tk.Button(
+            status_frame,
+            text="🗑️  Limpar Tudo",
+            command=self._limpar_tudo,
+            font=('Inter', 10, 'bold'),
+            bg=self.colors['warning'],
+            fg='white',
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor='hand2',
+            activebackground='#D97706',
+            activeforeground='white'
+        )
+        self.btn_limpar_tudo.pack(side=tk.RIGHT, padx=15, pady=5)
 
     def _criar_card(self, parent):
         """Cria um card (frame com sombra e bordas arredondadas simuladas)."""
@@ -1971,6 +1992,39 @@ class VerificadorGeorreferenciamento:
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        .linha-grupo {
+            background: #fafafa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .linha-titulo {
+            color: #1a1a1a;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        .subtitulo-secao {
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            padding-left: 10px;
+            border-left: 4px solid #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tabela-linha {
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -2132,12 +2186,8 @@ class VerificadorGeorreferenciamento:
         identicos_segmento = 0
         diferencas_segmento = 0
 
-        # VÉRTICE
-        html.append('<h2 class="section-title">Comparação de Vértices</h2>')
-        html.append('<table>')
-        html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
-        html.append('</tr></thead><tbody>')
+        # VÉRTICE E SEGMENTO VANTE (Agrupados por linha)
+        html.append('<h2 class="section-title">Comparação Completa por Linha</h2>')
 
         max_rows = max(len(dados_incra), len(dados_projeto))
 
@@ -2145,6 +2195,18 @@ class VerificadorGeorreferenciamento:
             incra_row = dados_incra[i] if i < len(dados_incra) else []
             projeto_row = dados_projeto[i] if i < len(dados_projeto) else []
 
+            # Cabeçalho da linha
+            html.append(f'<div class="linha-grupo">')
+            html.append(f'<h3 class="linha-titulo">LINHA {i}</h3>')
+
+            # Tabela de Vértices para esta linha
+            html.append('<h4 class="subtitulo-secao">Vértice</h4>')
+            html.append('<table class="tabela-linha">')
+            html.append('<thead><tr>')
+            html.append('<th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
+            html.append('</tr></thead><tbody>')
+
+            # Dados do Vértice
             codigo_incra = self._limpar_string(incra_row[0] if len(incra_row) > 0 else "")
             codigo_projeto = self._limpar_string(projeto_row[0] if len(projeto_row) > 0 else "")
 
@@ -2157,14 +2219,14 @@ class VerificadorGeorreferenciamento:
             alt_incra = self._limpar_string(incra_row[3] if len(incra_row) > 3 else "")
             alt_projeto = self._limpar_string(projeto_row[3] if len(projeto_row) > 3 else "")
 
-            campos = [
+            campos_vertice = [
                 ("Código", codigo_incra, codigo_projeto),
                 ("Longitude", long_incra, long_projeto),
                 ("Latitude", lat_incra, lat_projeto),
                 ("Altitude", alt_incra, alt_projeto)
             ]
 
-            for campo, val_incra, val_projeto in campos:
+            for campo, val_incra, val_projeto in campos_vertice:
                 status_classe = "identico" if val_incra == val_projeto else "diferente"
                 status_texto = "✅ Idêntico" if val_incra == val_projeto else "❌ Diferente"
 
@@ -2174,23 +2236,20 @@ class VerificadorGeorreferenciamento:
                     diferencas_vertice += 1
 
                 html.append(f'<tr class="{status_classe}">')
-                html.append(f'<td>{i}</td><td><strong>{campo}</strong></td>')
+                html.append(f'<td><strong>{campo}</strong></td>')
                 html.append(f'<td>{val_incra}</td><td>{val_projeto}</td><td>{status_texto}</td>')
                 html.append('</tr>')
 
-        html.append('</tbody></table>')
+            html.append('</tbody></table>')
 
-        # SEGMENTO VANTE
-        html.append('<h2 class="section-title">Comparação de Segmentos Vante</h2>')
-        html.append('<table>')
-        html.append('<thead><tr>')
-        html.append('<th>Linha</th><th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
-        html.append('</tr></thead><tbody>')
+            # Tabela de Segmento Vante para esta linha
+            html.append('<h4 class="subtitulo-secao">Segmento Vante</h4>')
+            html.append('<table class="tabela-linha">')
+            html.append('<thead><tr>')
+            html.append('<th>Campo</th><th>INCRA</th><th>Projeto</th><th>Status</th>')
+            html.append('</tr></thead><tbody>')
 
-        for i in range(1, max_rows):
-            incra_row = dados_incra[i] if i < len(dados_incra) else []
-            projeto_row = dados_projeto[i] if i < len(dados_projeto) else []
-
+            # Dados do Segmento
             cod_seg_incra = self._limpar_string(incra_row[4] if len(incra_row) > 4 else "")
             cod_seg_projeto = self._limpar_string(projeto_row[4] if len(projeto_row) > 4 else "")
 
@@ -2200,13 +2259,13 @@ class VerificadorGeorreferenciamento:
             dist_incra = self._limpar_string(incra_row[6] if len(incra_row) > 6 else "")
             dist_projeto = self._limpar_string(projeto_row[6] if len(projeto_row) > 6 else "")
 
-            campos = [
+            campos_segmento = [
                 ("Código", cod_seg_incra, cod_seg_projeto),
                 ("Azimute", azim_incra, azim_projeto),
                 ("Distância", dist_incra, dist_projeto)
             ]
 
-            for campo, val_incra, val_projeto in campos:
+            for campo, val_incra, val_projeto in campos_segmento:
                 status_classe = "identico" if val_incra == val_projeto else "diferente"
                 status_texto = "✅ Idêntico" if val_incra == val_projeto else "❌ Diferente"
 
@@ -2216,11 +2275,12 @@ class VerificadorGeorreferenciamento:
                     diferencas_segmento += 1
 
                 html.append(f'<tr class="{status_classe}">')
-                html.append(f'<td>{i}</td><td><strong>{campo}</strong></td>')
+                html.append(f'<td><strong>{campo}</strong></td>')
                 html.append(f'<td>{val_incra}</td><td>{val_projeto}</td><td>{status_texto}</td>')
                 html.append('</tr>')
 
-        html.append('</tbody></table>')
+            html.append('</tbody></table>')
+            html.append('</div>')  # Fecha linha-grupo
 
         # RESUMO
         identicos_total = identicos_vertice + identicos_segmento
@@ -2273,6 +2333,101 @@ class VerificadorGeorreferenciamento:
         webbrowser.open(f'file://{caminho_completo}')
 
         self._atualizar_status(f"✅ Relatório salvo: {caminho_completo}")
+
+    def _limpar_pasta_temp(self):
+        """Remove a pasta temporária conferencia_geo_temp."""
+        try:
+            # Pasta em Downloads
+            pasta_downloads = Path.home() / "Downloads" / "conferencia_geo_temp"
+            if pasta_downloads.exists():
+                shutil.rmtree(pasta_downloads)
+                self._atualizar_status("🗑️ Pasta temporária em Downloads removida")
+
+            # Pasta em temp do sistema
+            pasta_temp = Path(tempfile.gettempdir()) / "conferencia_geo"
+            if pasta_temp.exists():
+                shutil.rmtree(pasta_temp)
+                self._atualizar_status("🗑️ Pasta temporária do sistema removida")
+
+        except Exception as e:
+            print(f"Erro ao limpar pasta temp: {e}")
+
+    def _limpar_tudo(self):
+        """Limpa todos os campos e reseta o estado da aplicação."""
+        resposta = messagebox.askyesno(
+            "Confirmar Limpeza",
+            "Deseja limpar todos os dados e começar uma nova comparação?\n\n" +
+            "Isso irá:\n" +
+            "• Limpar todos os campos\n" +
+            "• Remover arquivos temporários\n" +
+            "• Resetar a interface"
+        )
+
+        if resposta:
+            try:
+                # Limpar variáveis
+                self.incra_path.set("")
+                self.projeto_path.set("")
+                self.numero_prenotacao.set("")
+                self.incra_paginas.set("")
+                self.projeto_paginas.set("")
+                self.incra_anexo_path.set("")
+                self.projeto_anexo_path.set("")
+
+                # Resetar labels de anexo
+                if hasattr(self, 'incra_anexo_label'):
+                    self.incra_anexo_label.config(
+                        text="Nenhum arquivo selecionado",
+                        fg=self.colors['text_medium']
+                    )
+                if hasattr(self, 'projeto_anexo_label'):
+                    self.projeto_anexo_label.config(
+                        text="Nenhum arquivo selecionado",
+                        fg=self.colors['text_medium']
+                    )
+
+                # Limpar dados extraídos
+                self.incra_excel_path = None
+                self.projeto_excel_path = None
+                self.incra_data = None
+                self.projeto_data = None
+                self.pdf_extraido_incra = None
+                self.pdf_extraido_projeto = None
+                self.preview_incra_image = None
+                self.preview_projeto_image = None
+
+                # Esconder preview frame se estiver visível
+                if hasattr(self, 'preview_frame'):
+                    self.preview_frame.pack_forget()
+
+                # Limpar área de resultados
+                self.resultado_text.delete(1.0, tk.END)
+                self.resultado_text.insert(1.0, "Interface limpa. Pronto para nova comparação.")
+
+                # Limpar pasta temporária
+                self._limpar_pasta_temp()
+
+                # Habilitar botões
+                self._habilitar_botoes()
+
+                # Atualizar status
+                self._atualizar_status("✨ Interface limpa! Pronto para nova comparação.")
+
+                messagebox.showinfo("Sucesso", "Interface limpa com sucesso!")
+
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao limpar interface:\n\n{str(e)}")
+
+    def _ao_fechar_programa(self):
+        """Executado ao fechar o programa - limpa arquivos temporários."""
+        try:
+            # Limpar pasta temporária
+            self._limpar_pasta_temp()
+        except:
+            pass
+        finally:
+            # Fechar o programa
+            self.root.destroy()
 
     def _mostrar_resumo_no_texto(self):
         """Mostra resumo simplificado na área de texto."""
